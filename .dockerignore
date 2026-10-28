@@ -5,3 +5,6 @@ node_modules
 *.log
 docs
 tests
+.graphify-venv/
+graphify-out/
+.codex/

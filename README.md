@@ -6,6 +6,10 @@ This setup includes a runnable **Spanish-default and English demo**, an optional
 
 The first prospect-demo scope now allows **our own kitchen dashboard and pay at pickup**, with **Webpay sandbox checkout** planned independently of a restaurant POS. Local kitchen and pay-at-pickup mode are implemented; Webpay sandbox remains pending. See [live-demo setup and account handoff](docs/live-demo-onboarding.md) and [tracking issue #27](https://github.com/arkajyotiMukherjee/easy-eatery/issues/27).
 
+## Agent context and cloud handoff
+
+Start with [AGENTS.md](AGENTS.md), query the committed [Graphify graph](graphify-out/graph.json), then read the relevant scoped guide before source. Give cloud orchestrators [this execution handoff](docs/cloud-agent-handoff.md). It covers subagent workstreams, implementation evidence and external blockers. Refresh with `python3 scripts/update-context.py`; CI validates freshness with `--check`. [Graphify setup](docs/graphify.md) explains the portable code and decision layers.
+
 ## Run the demo
 
 Requires Node.js 24+ and npm.
