@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Easy Eatery · Demo de retiro</title>
+  <meta name="description" content="Demostración de pedidos por WhatsApp y retiro en restaurante.">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a href="/" class="brand">ee<span>Easy Eatery</span></a><div class="header-tools"><span class="pill">POC / CHILE</span><label for="language" data-i18n="language">Idioma / Language</label><select id="language" name="language"><option value="es" lang="es">Español</option><option value="en" lang="en">English</option></select></div></header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">MESA SUR · SANTIAGO</p><h1 data-i18n="headline">Del chat a la cocina.</h1><p data-i18n="subtitle">Un pedido, un pago, un retiro. Todo en el mismo lugar.</p></div><div class="demo-note"><strong data-i18n="demoTitle">Entorno de demostración</strong><br><span data-i18n="demoPayments">Pagos y cocina simulados.</span><br><span data-i18n="demoReset">Los datos se borran al reiniciar.</span></div></div>
+    <form id="access-form" action="/api/dashboard" method="post" class="access">
+      <label for="key" data-i18n="panelKey">Clave del panel</label><input id="key" name="key" type="password" autocomplete="off" required minlength="16" data-placeholder="keyPlaceholder" placeholder="Usa la clave de tu terminal">
+      <button type="submit" data-i18n="openDemo">Abrir demo</button><span id="connection" role="status" data-i18n="disconnected">Sin conexión</span>
+    </form>
+    <p id="error" class="error" role="alert"></p>
+    <section class="stats" data-aria="orderSummary" aria-label="Resumen de pedidos">
+      <article><p data-i18n="whatsappOrders">Pedidos de WhatsApp</p><strong id="orders-count">0</strong><small data-i18n="source">Origen: Easy Eatery</small></article>
+      <article><p data-i18n="confirmedPayments">Pagos confirmados</p><strong id="paid-count">0</strong><small data-i18n="simulated">Simulados en esta demo</small></article>
+      <article><p data-i18n="pickupSales">Ventas por retiro</p><strong id="revenue">$0</strong><small data-i18n="paidAmount">CLP · importe pagado</small></article>
+      <article><p data-i18n="completedPickups">Retiros completados</p><strong id="collected-count">0</strong><small data-i18n="handedOver">Entregados al cliente</small></article>
+    </section>
+    <div class="workspace">
+      <section class="chat panel" aria-labelledby="chat-title">
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="customerExperience">01 / EXPERIENCIA DEL CLIENTE</p><h2 id="chat-title" data-i18n="chatTitle">Pedido por WhatsApp</h2></div><span class="dot-label" data-i18n="simulator">Simulador</span></div>
+        <div class="chat-heading"><span class="avatar">MS</span><div><strong>Mesa Sur</strong><small data-i18n="pickupPrices">Retiro en el local · precios en CLP</small></div></div>
+        <div id="messages" class="messages" role="log" data-aria="conversation" aria-label="Conversación"><p class="chat-hint" data-i18n="chatHint">Escribe cualquier saludo para ver el menú. Prueba: hola → 1 x 2 → 3 → confirmar.</p></div>
+        <form id="chat-form" action="/api/demo/messages" method="post">
+          <label for="message" data-i18n="customerMessage">Mensaje del cliente</label><div class="compose"><input id="message" name="text" required maxlength="1000" data-placeholder="messagePlaceholder" placeholder="Escribe hola para comenzar" enterkeyhint="send"><button type="submit" data-i18n="send">Enviar</button></div>
+        </form>
+        <div class="shortcuts" data-aria="quickMessages" aria-label="Mensajes rápidos"><button type="button" data-message="menu" data-i18n="viewMenu">Ver menú</button><button type="button" data-message="cart" data-i18n="viewCart">Ver carrito</button><button type="button" data-message="confirm" data-i18n="confirm">Confirmar</button><button type="button" data-message="new" data-i18n="newOrder">Nuevo pedido</button></div>
+      </section>
+      <section class="panel operations" aria-labelledby="pickup-title">
+        <div class="section-heading"><div><p class="eyebrow" data-i18n="operations">02 / OPERACIÓN DEL RESTAURANTE</p><h2 id="pickup-title" data-i18n="pickupTitle">Retiros en curso</h2></div><button type="button" id="refresh" class="secondary" data-i18n="refresh">Actualizar</button></div>
+        <p class="muted" data-i18n="operationsHint">El pedido llega a la cocina simulada después del pago. Avanza su estado hasta la entrega.</p>
+        <p id="provider" class="muted"></p>
+        <div id="order-list" aria-live="polite"></div>
+        <div class="module-note"><span class="check">✓</span><div><strong data-i18n="moduleStatus">WhatsApp activo · menú QR desactivado</strong><p data-i18n="moduleHint">El catálogo y los pedidos son capacidades compartidas. Cada servicio se puede activar por separado.</p></div></div>
+      </section>
+    </div>
+    <footer><span data-i18n="footer">Easy Eatery / primer piloto</span><span>America/Santiago · CLP · Español / English</span></footer>
+  </main>
+  <noscript>Esta demo requiere JavaScript. / This interactive demo requires JavaScript.</noscript>
+</body>
+</html>
