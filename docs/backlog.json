@@ -1,0 +1,480 @@
+{
+  "repository": "arkajyotiMukherjee/easy-eatery",
+  "milestones": [
+    {
+      "title": "M0 — Pilot scope and provider access",
+      "description": "Validate one Chilean pickup use case and prove WhatsApp, hosted checkout and external kitchen-order access for BOTH Toteat and Fudo. Exit: signed-off bilingual flow, sandbox credentials, provider-specific evidence and recorded payment decisions.",
+      "number": 1
+    },
+    {
+      "title": "M1 — Modular foundation and local demo",
+      "description": "Runnable TypeScript modular monolith: shared tenant/catalog/order capabilities, WhatsApp ordering, simulated payment and POS adapters, Spanish demo and pickup dashboard. Exit: repeatable demo and automated critical-path checks; simulations visibly labeled.",
+      "number": 2
+    },
+    {
+      "title": "M2 — Real WhatsApp ordering",
+      "description": "Cloud API test account, verified signed webhooks, durable inbox/outbox, Spanish-default and English ordering with safe session recovery. Exit: permitted recipients complete ordering with redacted delivery evidence.",
+      "number": 3
+    },
+    {
+      "title": "M3 — Payments and kitchen integration",
+      "description": "Implement BOTH Toteat and Fudo adapters with verified hosted checkout per restaurant. Exit: sandbox payments reconcile server-side, exactly one kitchen order per selected provider, readiness reconciliation, provider parity tests and failure recovery.",
+      "number": 4
+    },
+    {
+      "title": "M4 — Customer demo and Chile pilot readiness",
+      "description": "Regional staging, bilingual authenticated pickup dashboard, runbooks, acceptance rehearsal and restaurant pilot gate. Exit: customer feedback recorded, both POS systems verified, and no unresolved payment, duplicate-order, privacy or pickup blockers.",
+      "number": 5
+    }
+  ],
+  "issues": [
+    {
+      "id": "P01",
+      "milestone": 1,
+      "title": "Validate the first restaurant pickup workflow",
+      "priority": "P0",
+      "complexity": "S",
+      "estimate": "0.5–1 day",
+      "deps": [],
+      "criteria": [
+        "Interview the owner and kitchen lead; record current WhatsApp order volume, missed orders, pickup timing and POS/version.",
+        "Select one restaurant, branch, currency CLP, Spanish copy, operating hours and an initial small menu.",
+        "Agree measurable demo and pilot success criteria and who handles cancellations and paid-but-unaccepted orders."
+      ],
+      "doc": "docs/product-and-milestones.md"
+    },
+    {
+      "id": "P02",
+      "milestone": 1,
+      "title": "Prove access to both Toteat and Fudo for the initial pilot",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days + provider wait",
+      "deps": [
+        "P01"
+      ],
+      "criteria": [
+        "Obtain owner-authorized sandbox accounts for both providers and record restaurant/branch/account capabilities without committing credentials.",
+        "For Toteat, verify products, shift status, external paid pickup creation, status lookup and webhook authenticity; record external ID duplicate/timeout behavior.",
+        "For Fudo, obtain external-order integration approval and confirm the required Delivery module; prove product mappings, order injection and status notifications. General API access alone is insufficient.",
+        "Record capability evidence and sanitized fixtures separately for both providers; both are initial-pilot requirements. Do not label the pilot ready while either provider remains unverified."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P03",
+      "milestone": 1,
+      "title": "Prove hosted payment-link capability and merchant settlement",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days + provider wait",
+      "deps": [
+        "P01",
+        "P02"
+      ],
+      "criteria": [
+        "For both Toteat and Fudo, establish whether the authorized integration can create a hosted checkout for external pickup orders, including expiry, payment verification and refunds.",
+        "Public Toteat order payment fields are accounting input, not evidence of a checkout-link API. Record evidence of the supported flow.",
+        "Where either POS cannot create checkout links, obtain owner agreement for a Chile-supported merchant gateway (e.g. Webpay or Mercado Pago), with settlement to the restaurant and correct payment-method mapping for each POS.",
+        "Approve the payment-before-POS sequence and timeout/refund runbook. No real payment adapter until this decision is recorded."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P04",
+      "milestone": 1,
+      "title": "Review the Spanish customer flow and pickup dashboard with the restaurant",
+      "priority": "P0",
+      "complexity": "S",
+      "estimate": "0.5–1 day",
+      "deps": [
+        "P01"
+      ],
+      "criteria": [
+        "Use the local simulation to rehearse greeting → menu → cart edits → total → checkout → kitchen acceptance → pickup.",
+        "Review Spanish copy, unavailable items, allergens handoff, expected preparation time and receipt expectations with the restaurant.",
+        "Record feedback and pilot commitment; freeze the smallest menu and flow before building a full owner platform."
+      ],
+      "doc": "docs/demo-and-pilot.md"
+    },
+    {
+      "id": "P05",
+      "milestone": 2,
+      "title": "Establish the TypeScript modular monolith and repeatable local demo",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [],
+      "criteria": [
+        "Deliver shared tenant/catalog/order services and independent WhatsApp, payment and POS boundaries; QR module remains disabled.",
+        "Provide Node setup, lockfile, environment example, CI type checks and end-to-end critical-path tests.",
+        "Deliver browser chat simulation, explicit fake payment/kitchen states and pickup counts in es-CL.",
+        "Run documented checks and demonstrate a restart resets data; never describe this in-memory baseline as pilot-ready.",
+        "Provide Spanish-default and English UI/conversation support with an explicit language selector, locale-aware CLP formatting and no cart loss when changing language."
+      ],
+      "doc": "README.md"
+    },
+    {
+      "id": "P06",
+      "milestone": 2,
+      "title": "Replace demo storage with PostgreSQL and enforce restaurant access",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2–3 days",
+      "deps": [
+        "P05"
+      ],
+      "criteria": [
+        "Implement migrations, seed command, repositories, authenticated owner/staff roles and server-side tenant/branch mapping.",
+        "Persist catalog, sessions, order lines, payment attempts, provider references, inbox/outbox and audit events; use tenant-scoped constraints.",
+        "Test cross-tenant reads/writes and provider callbacks cannot access another restaurant; no tenant ID accepted from a customer's message.",
+        "Verify restart recovery and transaction rollback. Replace shared demo key with real staff authentication before staging handles customer data."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P07",
+      "milestone": 2,
+      "title": "Import the pilot catalog and enforce service availability",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P02",
+        "P06"
+      ],
+      "criteria": [
+        "Map both providers' product/modifier identifiers to the shared catalog, including Spanish and English display names; store integer CLP totals and a versioned price quote.",
+        "Reject sold-out items, unsupported modifiers, closed shifts and out-of-hours checkout; reconfirm price changes.",
+        "Support manual seed/import as an explicit pilot fallback with restaurant approval; WhatsApp must not require QR-menu entitlement.",
+        "Provide an operator correction flow and test mapping drift, stale catalog and invalid product IDs."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P08",
+      "milestone": 2,
+      "title": "Implement durable order states, quotes and transactional events",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2 days",
+      "deps": [
+        "P06",
+        "P07"
+      ],
+      "criteria": [
+        "Separate order, payment and POS submission states, with immutable confirmed lines, totals, quote expiry and source attribution.",
+        "Persist idempotency keys and inbox/outbox events in the same transaction as order changes.",
+        "Support payment_pending, paid, pos_pending, accepted, preparing, ready, collected, cancelled and needs_attention outcomes without illegal transitions.",
+        "Test concurrent confirmations and retries; a payment success must not imply restaurant acceptance."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P09",
+      "milestone": 3,
+      "title": "Connect the Meta WhatsApp Cloud API test account",
+      "priority": "P0",
+      "complexity": "S",
+      "estimate": "0.5–1 day + account wait",
+      "deps": [
+        "P02",
+        "P05"
+      ],
+      "criteria": [
+        "Configure a business app, test sender, permitted recipients, messages subscription and public HTTPS callback.",
+        "Store app secret, verification token and access token in environment/secret storage; pin a supported Graph API version from the app.",
+        "Demonstrate one signed inbound greeting and outbound Spanish menu to a permitted test recipient; redact phone numbers and tokens from evidence.",
+        "Record token lifetime/rotation and the supported messaging window/template requirements; the WhatsApp Business app alone is not the webhook API."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P10",
+      "milestone": 3,
+      "title": "Make signed WhatsApp webhooks durable and retryable",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2–3 days",
+      "deps": [
+        "P06",
+        "P08",
+        "P09"
+      ],
+      "criteria": [
+        "Verify HMAC against exact raw request bytes, map receiving phone ID to tenant, and reject unknown accounts.",
+        "Commit a uniquely keyed inbound event before returning success; process asynchronously with per-conversation serialization.",
+        "Persist outbound work, bounded retry/backoff, delivery statuses, dead-letter visibility and message/session retention.",
+        "Test batched/status/media payloads, replay, restart, concurrent delivery, expired tokens and provider timeout; no raw bodies or phone numbers in application logs."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P11",
+      "milestone": 3,
+      "title": "Build the Spanish WhatsApp menu, cart and confirmation journey",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2–3 days",
+      "deps": [
+        "P07",
+        "P08",
+        "P10"
+      ],
+      "criteria": [
+        "Respond to an initial greeting or unsupported input with help and menu; support item selection, quantity, removal, review and explicit confirmation.",
+        "Use bounded interactive lists/buttons with pagination where appropriate and text fallbacks; catalog owns prices and availability.",
+        "Show final CLP total and pickup expectations before creating a single checkout; recover an existing unpaid checkout on repeated confirmation.",
+        "Test sold-out changes, quote expiry, repeated replies, stale buttons, session expiry and a new order. No generative AI is required for this POC.",
+        "Default conversations to Spanish; support explicit English/Español commands and localized menu/cart/checkout messages without altering the order or total."
+      ],
+      "doc": "docs/product-and-milestones.md"
+    },
+    {
+      "id": "P12",
+      "milestone": 3,
+      "title": "Add staff handoff and permitted pickup notifications",
+      "priority": "P1",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P10",
+        "P11"
+      ],
+      "criteria": [
+        "Provide a human-help path for unknown requests, allergy questions, payment exceptions and rejected orders.",
+        "Send payment received, restaurant accepted and ready-for-pickup notifications only from verified domain state.",
+        "Enforce the applicable customer-service window; use an approved utility template outside it or route to staff.",
+        "Test failed delivery, late readiness, and no marketing messages or sensitive payment data in chat."
+      ],
+      "doc": "docs/demo-and-pilot.md"
+    },
+    {
+      "id": "P13",
+      "milestone": 4,
+      "title": "Implement the Toteat catalog and paid-pickup adapter",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2–3 days",
+      "deps": [
+        "P02",
+        "P07",
+        "P08"
+      ],
+      "criteria": [
+        "Implement the Toteat adapter for restaurant-scoped credentials, menu mappings, open-shift check and external paid pickup submission. Fudo is implemented separately in P22.",
+        "Use verified base URLs and provider product/payment IDs, external correlation and accepted response references.",
+        "Contract-test sanitized provider fixtures, 4xx/429/5xx, closed shift, unknown products and mapping mismatch.",
+        "Prove a paid sandbox order appears in the Toteat restaurant's actual kitchen workflow, with payment-method mapping and pickup semantics confirmed by staff."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P14",
+      "milestone": 4,
+      "title": "Implement the approved hosted checkout adapter",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2 days",
+      "deps": [
+        "P03",
+        "P08"
+      ],
+      "criteria": [
+        "Create a server-priced checkout with tenant, order, amount, currency, expiry and unique merchant reference.",
+        "Send the real provider-hosted HTTPS URL in WhatsApp; never collect card data in our app.",
+        "Support provider signature/status verification requirements and merchant credentials per restaurant.",
+        "Test expiry, abandoned checkout, duplicate requests and gateway errors. Clearly distinguish sandbox from production and record who receives settlement."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P15",
+      "milestone": 4,
+      "title": "Reconcile verified payments and submit paid orders once",
+      "priority": "P0",
+      "complexity": "L",
+      "estimate": "2–3 days",
+      "deps": [
+        "P10",
+        "P13",
+        "P14",
+        "P22"
+      ],
+      "criteria": [
+        "Accept payment only after authenticating the notification and verifying amount, currency, merchant, order reference and authoritative provider status.",
+        "Atomically mark paid and schedule POS work, routing to the tenant's configured Toteat or Fudo adapter; browser returns, chat messages and demo endpoints cannot mark production orders paid.",
+        "Handle duplicate/out-of-order payment events, late settlement, checkout expiry and concurrent workers without duplicate fulfillment.",
+        "Test wrong totals/merchants, forged callbacks, paid-before-callback, provider timeout and paid-but-POS-failed exception visibility."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P16",
+      "milestone": 4,
+      "title": "Reconcile POS submission retries and kitchen status updates",
+      "priority": "P0",
+      "complexity": "L",
+      "estimate": "2–3 days",
+      "deps": [
+        "P13",
+        "P15",
+        "P22"
+      ],
+      "criteria": [
+        "Authenticate provider callbacks according to the actual provider contract; persist and deduplicate inbound changes.",
+        "Reconcile unknown submission outcomes by external reference before retry; do not assume provider-side idempotency exists.",
+        "If authoritative lookup/idempotency is unavailable, park uncertain orders for staff review instead of blind resubmission.",
+        "Map accepted, rejected, preparing, ready and collected states with polling fallback where supported; test duplicate callbacks and missed/out-of-order events."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P17",
+      "milestone": 4,
+      "title": "Implement cancellation, refund and reconciliation exceptions",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P15",
+        "P16"
+      ],
+      "criteria": [
+        "Agree staff authority and cutoff for cancel/reject/refund; preserve an audit trail and gateway refund references.",
+        "Make paid-but-rejected or late-paid orders visible with an actionable owner, customer notification and escalation timer.",
+        "Reconcile daily provider payments, local orders and POS references; surface missing/duplicate discrepancies.",
+        "Test refund failure, partial/duplicate notifications and cancellation racing payment; the dashboard must not count refunded money as net sales."
+      ],
+      "doc": "docs/demo-and-pilot.md"
+    },
+    {
+      "id": "P18",
+      "milestone": 5,
+      "title": "Deliver the authenticated restaurant pickup logistics dashboard",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "2–3 days",
+      "deps": [
+        "P06",
+        "P08",
+        "P16",
+        "P17"
+      ],
+      "criteria": [
+        "Show WhatsApp-sourced pickup counts, paid/refunded amounts, accepted/preparing/ready/collected queues and integration exceptions.",
+        "Filter by restaurant-local date in America/Santiago and branch; amounts are CLP and labels es-CL.",
+        "Allow permitted staff to acknowledge pickup with audit history; show freshness/failures and independently selectable Spanish-default or English UI, including labels, actions, empty/error states and product display names.",
+        "Test empty/busy/mobile states, authorization and cross-tenant access; dashboard totals reconcile to the order/payment ledger."
+      ],
+      "doc": "docs/product-and-milestones.md"
+    },
+    {
+      "id": "P19",
+      "milestone": 5,
+      "title": "Deploy isolated Santiago staging with database and secret management",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P06",
+        "P10"
+      ],
+      "criteria": [
+        "Prepare reviewed infrastructure for Cloud Run and Cloud SQL PostgreSQL in southamerica-west1 after verifying service options and cost.",
+        "Provide HTTPS webhooks, separate staging/production secrets, least-privilege identities, migrations, health checks and rollback.",
+        "Configure durable queue execution, database backups/restore rehearsal and redacted telemetry; no process-local correctness assumptions.",
+        "Document deploy/rollback commands and estimated operating cost; prove simulated routes are disabled in real pilot mode."
+      ],
+      "doc": "docs/architecture.md"
+    },
+    {
+      "id": "P20",
+      "milestone": 5,
+      "title": "Prepare pilot privacy, support and operational controls",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P01",
+        "P10",
+        "P17",
+        "P19"
+      ],
+      "criteria": [
+        "Inventory personal data, restaurant access, subprocessors, retention/deletion and incident contacts; review Chile-specific obligations with appropriate local advice.",
+        "Separate transactional ordering permission from optional marketing consent; collect only contact details needed for pickup.",
+        "Document secret rotation, backup recovery, webhook outage, manual order recovery and paid-but-unaccepted response ownership.",
+        "Rehearse a shift handover and incident; no raw payment details, secrets or full customer messages in telemetry."
+      ],
+      "doc": "docs/demo-and-pilot.md"
+    },
+    {
+      "id": "P21",
+      "milestone": 5,
+      "title": "Run customer demo, sandbox acceptance and the Chile pilot go/no-go",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days + pilot observation",
+      "deps": [
+        "P04",
+        "P11",
+        "P12",
+        "P17",
+        "P18",
+        "P19",
+        "P20",
+        "P23"
+      ],
+      "criteria": [
+        "Rehearse the demo separately for Toteat and Fudo using a permitted real WhatsApp recipient, approved sandbox checkout, actual restaurant kitchen confirmation and reconciled dashboard totals. Both providers are required for initial-pilot sign-off.",
+        "Record evidence for duplicate inbound/payment events, closed kitchen, sold-out product, gateway failure, POS timeout, ready notification and pickup.",
+        "Obtain restaurant sign-off on menu, totals, promised pickup timing, staff ownership, support window and live-mode limitations.",
+        "Start only after provider access and payment/refund gates pass; review completion rate, time to acceptance, zero duplicate fulfillment, reconciliation exceptions and owner feedback before expanding scope.",
+        "Repeat the customer demo in English for the founder and Spanish for the restaurant; language changes must preserve cart/order state, CLP currency and Santiago business dates."
+      ],
+      "doc": "docs/demo-and-pilot.md"
+    },
+    {
+      "id": "P22",
+      "milestone": 4,
+      "title": "Implement the approved Fudo external-order and catalog adapter",
+      "priority": "P0",
+      "complexity": "L",
+      "estimate": "2–4 days + approval wait",
+      "deps": [
+        "P02",
+        "P07",
+        "P08"
+      ],
+      "criteria": [
+        "Use Fudo's approved external-order integration and a Delivery-enabled test account; do not infer order-injection permission from Pro/general API access.",
+        "Implement tenant-scoped authentication, product/modifier mapping, paid pickup creation, integration order references and provider-specific status callbacks from the authorized contract.",
+        "Map hosted-gateway settlement/payment method to the Fudo order without charging twice; prove pickup reaches the correct Delivery/kitchen workflow.",
+        "Contract-test sanitized success/rejection/429/timeout fixtures and obtain restaurant confirmation of one paid sandbox kitchen order. Block live mode until approval and all contract evidence exist."
+      ],
+      "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P23",
+      "milestone": 4,
+      "title": "Verify restaurant provider selection and Toteat/Fudo acceptance parity",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "1–2 days",
+      "deps": [
+        "P13",
+        "P22",
+        "P15",
+        "P16"
+      ],
+      "criteria": [
+        "Persist one selected POS per restaurant/branch with separately scoped credentials and mapping; route each order to exactly that connector. Never submit one order to both POS systems.",
+        "Run the same shared adapter suite against Toteat and Fudo fixtures: correct CLP totals, modifiers, paid pickup, duplicate replay, acceptance/readiness and uncertain outcomes.",
+        "Demonstrate two sandbox restaurant configurations through the full WhatsApp/payment/kitchen/dashboard flow, one for each provider, with no data/credential crossover.",
+        "Document provider-specific limitations and verify switching providers cannot reroute already-confirmed orders; no silent fallback to another restaurant or provider."
+      ],
+      "doc": "docs/integrations.md"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+name: Implementation task
+description: A bounded, reviewable POC task
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Customer or operational outcome
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and acceptance criteria
+      placeholder: Include failure paths and evidence needed to close this issue.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and provider-access gates
