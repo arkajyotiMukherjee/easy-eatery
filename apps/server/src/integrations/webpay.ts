@@ -11,7 +11,7 @@ export type SandboxStatus = Readonly<{
 }>;
 
 export class WebpaySandboxError extends Error {
-  constructor(readonly outcome: 'unknown' | 'rejected' | 'invalid_response') {
+  constructor(readonly outcome: 'unknown' | 'invalid_response') {
     // Never include gateway response bodies, tokens, URLs, credentials or original errors.
     super(`Webpay sandbox ${outcome}; reconcile before any further payment action.`);
   }
@@ -35,6 +35,7 @@ export class WebpaySandbox {
   private readonly returnUrl: string;
   private readonly timeoutMs: number;
   private readonly fetcher: typeof fetch;
+  get merchantCode() { return this.commerceCode; }
 
   constructor(options: { commerceCode: string; apiKey: string; returnUrl: string; timeoutMs?: number; fetcher?: typeof fetch }) {
     const url = new URL(options.returnUrl);
@@ -95,4 +96,12 @@ export class WebpaySandbox {
 
   commit(attempt: SandboxAttempt) { return this.inspect('PUT', attempt); }
   status(attempt: SandboxAttempt) { return this.inspect('GET', attempt); }
+  async reverse(attempt: SandboxAttempt) {
+    payment(attempt);
+    if (attempt.environment !== 'integration' || !token(attempt.token)) throw new TypeError('Invalid sandbox attempt.');
+    // Full amount only. Official SDK RefundRequest uses POST .../refunds {amount}.
+    // The application still checks authoritative status after this response.
+    const data = await this.request('POST', `/${attempt.token}/refunds`, { amount: attempt.amount });
+    if (!['REVERSED','NULLIFIED'].includes(String(data.type))) throw new WebpaySandboxError('invalid_response');
+  }
 }

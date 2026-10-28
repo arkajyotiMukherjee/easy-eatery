@@ -1,5 +1,7 @@
 # Integration decisions and test setup
 
+Cloud implementation update: optional [staff-assisted Webpay sandbox](webpay-sandbox.md) and [durable staff handoff/notifications](whatsapp-support.md) now have local fixture coverage. Default payment/POS adapters remain simulated; actual sandbox, real-phone, restaurant/vendor and production-hosting acceptance remain unverified. Historical scaffold descriptions below are not acceptance evidence.
+
 Research checked 28 October 2026. Public documentation establishes a possible integration surface; it does not grant access to a restaurant or prove its kitchen workflow. Both **Toteat and Fudo are required for the initial pilot**, using a separate configured provider per restaurant/branch. Never send one order to both.
 
 ## Capability matrix

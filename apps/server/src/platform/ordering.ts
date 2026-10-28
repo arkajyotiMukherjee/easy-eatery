@@ -22,7 +22,7 @@ export class OrderingService {
     }
     const order = this.store.createOrder(customerId, session.cart);
     session.orderId = order.id;
-    if (order.paymentMethod === 'pay_at_pickup') return order;
+    if (order.paymentMethod === 'pay_at_pickup' || order.paymentMethod === 'webpay_sandbox') return order;
     try {
       const checkout = await this.payment.createCheckout(order);
       order.paymentReference = checkout.reference;
@@ -36,7 +36,7 @@ export class OrderingService {
 
   async simulatePayment(id: string) {
     const order = this.store.order(id);
-    if (order.paymentMethod === 'pay_at_pickup') throw new DomainError('transition');
+    if (order.paymentMethod && order.paymentMethod !== 'simulation') throw new DomainError('transition');
     if (!order.posReference) this.store.assertOrderingAvailable();
     order.paymentState = 'simulated_paid';
     if (order.status === 'awaiting_payment') order.status = 'paid';
@@ -50,7 +50,7 @@ export class OrderingService {
 
   acceptPickup(id: string) {
     const order = this.store.order(id);
-    if (order.fulfillment !== 'local') throw new DomainError('transition');
+    if (order.fulfillment !== 'local' || order.paymentMethod !== 'pay_at_pickup') throw new DomainError('transition');
     if (order.status !== 'awaiting_payment') return order;
     this.store.assertOrderingAvailable();
     order.status = 'preparing';
@@ -66,6 +66,7 @@ export class OrderingService {
 
   transition(id: string, next: OrderStatus) {
     const order = this.store.order(id);
+    if (order.paymentMethod === 'webpay_sandbox' && order.paymentState !== 'sandbox_authorized') throw new DomainError('transition');
     if (order.status === next) return order;
     const allowed: Partial<Record<OrderStatus, OrderStatus>> = { preparing: 'ready', ready: 'collected' };
     if (allowed[order.status] !== next) throw new DomainError('transition');
@@ -78,10 +79,11 @@ export class OrderingService {
     const orders = [...this.store.orders.values()].filter(o => o.tenantId === this.store.tenant.id && o.branchId === this.store.tenant.branchId);
     return {
       tenant: this.store.tenant,
-      mode: this.store.tenant.payAtPickup ? 'local_pickup' : 'simulation',
+      mode: this.store.tenant.sandboxCheckout ? 'sandbox_pickup' : this.store.tenant.payAtPickup ? 'local_pickup' : 'simulation',
       metrics: {
         orders: orders.length,
         storePaidRevenue: orders.filter(o => o.paymentState === 'store_paid').reduce((sum, o) => sum + o.total, 0),
+        testAuthorizedRevenue: orders.filter(o => o.paymentState === 'sandbox_authorized').reduce((sum, o) => sum + o.total, 0),
         dueRevenue: orders.filter(o => o.paymentState === 'due').reduce((sum, o) => sum + o.total, 0),
         paidOrders: orders.filter(o => (o.paymentState === 'store_paid' || (!this.store.tenant.payAtPickup && o.paymentState === 'simulated_paid'))).length,
         collected: orders.filter(o => o.status === 'collected').length,

@@ -47,7 +47,9 @@
   {
     "id": "P10",
     "number": 10,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/10"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/10",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P11",
@@ -57,22 +59,30 @@
   {
     "id": "P12",
     "number": 12,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/12"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/12",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P13",
     "number": 13,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/13"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/13",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P14",
     "number": 14,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/14"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/14",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P15",
     "number": 15,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/15"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/15",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P16",
@@ -82,41 +92,57 @@
   {
     "id": "P17",
     "number": 17,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/17"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/17",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P18",
     "number": 18,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/18"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/18",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P19",
     "number": 19,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/19"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/19",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P20",
     "number": 20,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/20"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/20",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P21",
     "number": 21,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/21"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/21",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P22",
     "number": 22,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/22"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/22",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P23",
     "number": 23,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/23"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/23",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   },
   {
     "id": "P24",
     "number": 27,
-    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/27"
+    "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/27",
+    "pending_evidence": "docs/issue-evidence.md",
+    "github_update_status": "blocked_api_proxy_forbidden"
   }
 ]

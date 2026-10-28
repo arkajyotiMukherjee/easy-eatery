@@ -35,3 +35,5 @@ Machine-readable planning data: `backlog.json`. Actual created GitHub issue IDs/
 
 
 Cloud delivery adds sandbox adapter mock coverage and a repeatable bilingual local HTTP rehearsal. Live issue updates are blocked by runtime GitHub API denial; pending updates are in [issue evidence](issue-evidence.md). No external acceptance criterion was closed by these local checks.
+
+The integrated cloud slice adds optional durable sandbox checkout/reconciliation/full test reversal, signed delivery evidence, verified-window pickup notifications and staff handoff. Local evidence: 28 application tests, 43 PostgreSQL TAP results, ES/EN HTTP/Chromium checks, final nonroot image journey and disposable backup/restore. See the cloud handoff and pending issue evidence. Real hosted sandbox, real phones, provider kitchens, production refunds/hosting and restaurant approvals remain unverified.

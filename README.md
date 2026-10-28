@@ -4,7 +4,7 @@ Modular restaurant SaaS, starting with **WhatsApp pickup ordering for one restau
 
 This setup includes a runnable **Spanish-default and English demo**, an optional **PostgreSQL mode with individual staff access**, a test-account WhatsApp Cloud API transport, and **24 GitHub issues across five milestones**. Both **Toteat and Fudo** are required for the initial pilot. Payment and POS adapters remain **simulated**. Default memory mode resets on restart; PostgreSQL mode preserves restaurant data. The real-provider pilot is tracked in the backlog.
 
-The first prospect-demo scope now allows **our own kitchen dashboard and pay at pickup**, with **Webpay sandbox checkout** planned independently of a restaurant POS. Local kitchen and pay-at-pickup mode are implemented; Webpay sandbox remains pending. See [live-demo setup and account handoff](docs/live-demo-onboarding.md) and [tracking issue #27](https://github.com/arkajyotiMukherjee/easy-eatery/issues/27).
+The first prospect-demo scope now allows **our own kitchen dashboard and pay at pickup**, with **Webpay sandbox checkout** planned independently of a restaurant POS. Local kitchen and pay-at-pickup mode are implemented; Webpay sandbox now has an opt-in staff-assisted flow with local mock coverage; actual hosted sandbox acceptance remains pending. See [live-demo setup and account handoff](docs/live-demo-onboarding.md) and [tracking issue #27](https://github.com/arkajyotiMukherjee/easy-eatery/issues/27).
 
 ## Agent context and cloud handoff
 
@@ -129,3 +129,9 @@ All `/api/*` routes require `Authorization: Bearer <token>`: the local `ADMIN_TO
 | POST | `/webhooks/whatsapp` | Signed, mapped test-account messages; available only with configured Cloud transport |
 
 Do not point a real payment webhook at the demo payment endpoint. Durable storage does not turn the simulated financial workflow into a live payment system. Real adapters, asynchronous delivery/reconciliation and disabling demo mutations are explicit [pilot deployment requirements](https://github.com/arkajyotiMukherjee/easy-eatery/issues/19).
+
+## Cloud pilot implementation slices
+
+[Webpay sandbox setup](docs/webpay-sandbox.md) covers the opt-in PostgreSQL checkout, authoritative reconciliation and owner-only full test reversals. It uses local kitchen fulfillment and keeps test authorizations separate from real-money revenue. Actual hosted sandbox acceptance and production settlement remain unverified.
+
+[WhatsApp recovery](docs/whatsapp-recovery.md), [signed delivery evidence](docs/whatsapp-delivery-status.md) and [staff handoff/notifications](docs/whatsapp-support.md) describe the redacted staff controls and verified customer-service window. Apply migrations before starting an updated PostgreSQL server. For repeatable local acceptance, run `node --import tsx scripts/rehearse-demo.ts`; see the [operations runbook](docs/operations-rehearsal.md) and [POS access matrix](docs/pos-readiness.md) for remaining gates.

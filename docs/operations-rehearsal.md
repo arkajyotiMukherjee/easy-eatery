@@ -51,6 +51,15 @@ The checked-in Dockerfile runs Node 24 as the `node` user, starts the same TypeS
 docker build -t easy-eatery:rehearsal .
 ```
 
+In a managed environment whose approved HTTPS proxy uses an additional CA, forward existing proxy bindings and mount the existing CA only for installation:
+
+```sh
+docker build --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY \
+  --secret id=build_ca,src="$NODE_EXTRA_CA_CERTS" -t easy-eatery:rehearsal .
+```
+
+The optional BuildKit secret is available only during `npm ci`; its contents and the proxy bindings must not be copied into the image or repository. Normal environments omit this secret and use their normal verified trust store. Keep TLS and npm artifact integrity checks enabled. If Docker's client cache directory is read-only, use writable task-local `DOCKER_CONFIG` and `BUILDX_CONFIG` directories instead of changing trust or credentials. The image runtime does not require these build-only settings.
+
 The image needs development dependencies because `tsx` is the runtime loader. Do not prune them without changing and validating the packaging design. `.dockerignore` excludes `.env`, local dependencies, Git metadata and the context graph; never add a credential file to the build context or image. Before accepting the packaged build, run it with a fresh random `ADMIN_TOKEN` injected through the runtime environment, bind its published port to loopback, and verify `/health`, unauthenticated API rejection and a synthetic ordering journey. Stop the test container afterward. A successful build alone does not establish runtime readiness.
 
 Staging remains gated on an approved account, budget and hosting plan. The documented target is Cloud Run and Cloud SQL in Santiago; check service availability and cost before provisioning. Hostinger is not an approved alternative merely because a connector is available. No paid resource creation or provider setup is part of this runbook.
@@ -66,3 +75,7 @@ For ambiguous outbound sends, preserve the recorded attempt and reconcile the pr
 For an application rollback, first pause incoming work through the hosting system's approved controls, retain the database and audit history, and route traffic to the last compatible image/revision. Check migration compatibility before switching. Numbered migrations are not an automatic down-migration plan; do not drop tables or reset data to make an older revision start. If compatibility is unknown, keep the service paused and use a reviewed forward repair or an isolated restore rehearsal. After recovery, recheck health, staff scope, queue state and synthetic ordering, then have the assigned operator authorize resumption.
 
 The application stores conversation and order state; existing memory maps and durable inbox/outbox data do not establish a production retention policy. Agree access, retention periods, deletion/export handling and incident contacts with the restaurant before collecting customer data. Keep demo evidence synthetic. Backups and restores must be tested using isolated data before claiming recovery readiness, and any real data restore must preserve access controls and reconciliation obligations.
+
+## Current local packaging and restore evidence
+
+The cloud run built the final image with verified proxy trust, then verified nonroot startup, known assets, missing-auth rejection and a synthetic CLP 11,500 order through collection. Copies use explicit node ownership because a cloud checkout may have owner-only file modes. A disposable PostgreSQL custom-format pg_dump/pg_restore rehearsal preserved all eight migration checksums, an order with exact payment state, audit records and owner/viewer restrictions. Both temporary databases were removed after validation. This is local synthetic evidence, not an approved production backup/restore procedure.

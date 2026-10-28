@@ -1,15 +1,19 @@
 import { copy } from './i18n.js';
 import { createCatalogPanel } from './catalog-ui.js';
+import { createSandboxActions } from './sandbox-ui.js';
 const $ = id => document.getElementById(id);
 let token = '';
 let connected = false;
 let dashboard = null;
+let delivery = null;
+let refreshVersion = 0;
 let locale = 'es';
 try { if (localStorage.getItem('easy-eatery-language') === 'en') locale = 'en'; } catch {}
 const t = key => copy[locale][key];
 let customerId = `demo-${crypto.randomUUID()}`;
 const formatMoney = amount => new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
 const catalogPanel = createCatalogPanel({ api, t, guard, getRole: () => dashboard?.role, getLocale: () => locale });
+const sandboxActions = createSandboxActions({ api, guard, refresh, getLocale: () => locale });
 
 async function api(path, body) {
   const requestToken = token;
@@ -43,6 +47,7 @@ function bubble(text, customer = false, language = locale) {
 function renderDashboard() {
   $('order-list').replaceChildren();
   const data = dashboard;
+  renderDelivery();
   $('orders-count').textContent = data?.metrics.orders ?? 0;
   $('paid-count').textContent = data?.metrics.paidOrders ?? 0;
   $('revenue').textContent = formatMoney(data?.metrics.paidRevenue ?? 0);
@@ -56,11 +61,12 @@ function renderDashboard() {
   document.querySelectorAll('[data-message], #chat-form button').forEach(button => { button.disabled = data?.role === 'viewer'; });
   $('message').readOnly = data?.role === 'viewer';
   const local = data?.mode === 'local_pickup';
+  const sandbox = data?.mode === 'sandbox_pickup';
   for (const key of ['demoPayments', 'operationsHint', 'simulated', 'mappingHint']) {
     const node = document.querySelector(`[data-i18n="${key}"]`);
-    if (node) node.textContent = local ? t(key === 'operationsHint' ? 'localHint' : key === 'mappingHint' ? 'localMappingHint' : 'localKitchen') : t(key);
+    if (node) node.textContent = sandbox ? t(key === 'mappingHint' ? 'localMappingHint' : 'sandboxKitchen') : local ? t(key === 'operationsHint' ? 'localHint' : key === 'mappingHint' ? 'localMappingHint' : 'localKitchen') : t(key);
   }
-  $('provider').textContent = local ? t('localKitchen') : data ? `${t('provider')}: ${data.tenant.posProvider === 'fudo' ? 'Fudo' : 'Toteat'}` : '';
+  $('provider').textContent = sandbox ? `${t('sandboxTotal')}: ${formatMoney(data.metrics.testAuthorizedRevenue ?? 0)} · ${t('sandboxAuthorized')}` : local ? t('localKitchen') : data ? `${t('provider')}: ${data.tenant.posProvider === 'fudo' ? 'Fudo' : 'Toteat'}` : '';
   if (!data?.orders.length) {
     const empty = element('div', '', 'empty');
     empty.append(element('span', '↗', 'empty-icon'), element('h3', t('emptyTitle')), element('p', t('emptyHint')));
@@ -70,12 +76,13 @@ function renderDashboard() {
   for (const order of data.orders) {
     const card = element('article', '', 'order-card');
     const heading = element('div', '', 'order-top');
-    heading.append(element('h3', `#${order.id.slice(0, 8)}`), element('span', order.fulfillment === 'local' && order.status === 'awaiting_payment' ? t('awaitingStaff') : t('states')[order.status], 'badge'));
+    heading.append(element('h3', `#${order.id.slice(0, 8)}`), element('span', order.paymentMethod === 'webpay_sandbox' && order.status === 'awaiting_payment' ? t('states').awaiting_payment : order.fulfillment === 'local' && order.status === 'awaiting_payment' ? t('awaitingStaff') : t('states')[order.status], 'badge'));
     card.append(heading, element('p', order.lines.map(line => `${line.quantity} × ${locale === 'en' ? line.nameEn : line.name}`).join(' · ')), element('strong', formatMoney(order.total)));
     card.append(element('p', `${new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))} · WhatsApp · ${order.fulfillment === 'local' && order.status !== 'awaiting_payment' ? t('localKitchen') : order.posReference ? t('kitchenReceived') : t('kitchenPending')}`));
     const pickup = order.fulfillment === 'local';
-    if (pickup) card.append(element('p', t(order.paymentState === 'store_paid' ? 'storePaid' : 'paymentDue')));
-    const action = pickup && order.status === 'awaiting_payment' ? ['acceptPickup', 'accept', {}] :
+    if (order.paymentMethod === 'webpay_sandbox') card.append(sandboxActions(order, data.role));
+    else if (pickup) card.append(element('p', t(order.paymentState === 'store_paid' ? 'storePaid' : 'paymentDue')));
+    const action = order.paymentMethod === 'webpay_sandbox' ? null : pickup && order.status === 'awaiting_payment' ? ['acceptPickup', 'accept', {}] :
       pickup && order.status === 'ready' && order.paymentState !== 'store_paid' ? ['recordStorePayment', 'record-store-payment', {}] : order.status === 'awaiting_payment' || order.status === 'paid' ? ['pay', 'pay', {}] :
       order.status === 'preparing' ? ['ready', 'status', { status: 'ready' }] :
       order.status === 'ready' ? ['collect', 'status', { status: 'collected' }] : null;
@@ -92,6 +99,83 @@ function renderDashboard() {
     $('order-list').append(card);
   }
 }
+function renderDelivery() {
+  const panel = $('delivery-panel');
+  panel.hidden = !connected || dashboard?.persistence !== 'postgres' || !delivery;
+  $('delivery-jobs').replaceChildren();
+  $('delivery-counts').textContent = '';
+  $('delivery-receipts').replaceChildren();
+  $('support-items').replaceChildren();
+  if (panel.hidden) return;
+  const counts = new Map(delivery.summary.counts.map(row => [row.state, row.count]));
+  const queued = ['pending', 'reply_pending', 'sending'].reduce((sum, state) => sum + (counts.get(state) ?? 0), 0);
+  $('delivery-counts').textContent = [
+    `${t('deliveryFailed')}: ${counts.get('failed') ?? 0}`, `${t('deliveryUncertain')}: ${counts.get('needs_attention') ?? 0}`,
+    `${t('deliveryPending')}: ${queued}`, `${t('deliverySent')}: ${counts.get('sent') ?? 0}`, `${t('deliveryResolved')}: ${counts.get('resolved') ?? 0}`,
+  ].join(' · ');
+  if (!delivery.list.jobs.length) $('delivery-jobs').append(element('p', t('deliveryEmpty'), 'muted'));
+  for (const job of delivery.list.jobs) {
+    const uncertain = job.state === 'needs_attention';
+    const card = element('article', '', 'delivery-job');
+    card.append(element('h3', `${t('deliveryJob')} #${job.id} · ${t(uncertain ? 'deliveryUncertain' : 'deliveryFailed')}`));
+    const reason = job.error_code === 'processing_failed' ? 'deliveryProcessing' : job.error_code === 'provider_rejected' ? 'deliveryRejected' : job.error_code === 'customer_window_closed' ? 'deliveryWindowClosed' : 'deliveryUnknown';
+    card.append(element('p', `${t(reason)} · ${t('deliveryAttempts')}: ${job.attempts}`, 'muted'));
+    card.append(element('p', `${t('deliveryCreated')}: ${new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-CL', { timeZone: 'America/Santiago', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(job.created_at))}`, 'muted'));
+    if (dashboard.role !== 'viewer') {
+      const label = element('label', '', 'delivery-confirm');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      label.append(checkbox, element('span', t(uncertain ? 'deliveryResolveConfirm' : 'deliveryRetryConfirm')));
+      const button = element('button', t(uncertain ? 'deliveryResolve' : 'deliveryRetry'));
+      button.type = 'button';
+      button.disabled = true;
+      checkbox.addEventListener('change', () => { button.disabled = !checkbox.checked; });
+      button.addEventListener('click', () => guard(async () => {
+        if (!checkbox.checked) return;
+        button.disabled = true;
+        checkbox.disabled = true;
+        try {
+          await api(`/api/whatsapp/delivery/jobs/${encodeURIComponent(job.id)}/${uncertain ? 'resolve' : 'retry'}`, {
+            expectedState: job.state, expectedVersion: job.version, ...(uncertain ? { confirmation: 'reviewed_without_resend' } : {}),
+          });
+          await refresh();
+        } catch { throw new Error(t('deliveryActionError')); }
+        finally { checkbox.disabled = false; checkbox.checked = false; }
+      }));
+      card.append(label, button);
+    }
+    $('delivery-jobs').append(card);
+  }
+  if (delivery.list.jobs.length >= delivery.list.limit) $('delivery-jobs').append(element('p', t('deliveryLimit'), 'muted'));
+  if (!delivery.support.handoffs.length) $('support-items').append(element('p', t('supportEmpty'), 'muted'));
+  for (const request of delivery.support.handoffs) {
+    const card = element('article', '', 'support-request');
+    card.append(element('h3', `#${request.id} · ${t('supportReasons')[request.reason] ?? t('supportTitle')}`));
+    if (dashboard.role !== 'viewer') {
+      const label = element('label', '', 'delivery-confirm');
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox';
+      label.append(checkbox, element('span', t('supportReviewConfirm')));
+      const button = element('button', t('supportReview')); button.type = 'button'; button.disabled = true;
+      checkbox.addEventListener('change', () => { button.disabled = !checkbox.checked; });
+      button.addEventListener('click', () => guard(async () => {
+        if (!checkbox.checked) return;
+        button.disabled = true; checkbox.disabled = true;
+        try { await api(`/api/whatsapp/support/${encodeURIComponent(request.id)}/review`, {confirmation:'reviewed_without_contact'}); await refresh(); }
+        finally { checkbox.disabled = false; checkbox.checked = false; }
+      }));
+      card.append(label,button);
+    }
+    $('support-items').append(card);
+  }
+  if (!delivery.receipts.receipts.length) $('delivery-receipts').append(element('p', t('deliveryReceiptsEmpty'), 'muted'));
+  for (const receipt of delivery.receipts.receipts) {
+    const row = element('article', '', 'delivery-receipt');
+    row.append(element('h3', `${t(receipt.source === 'notification' ? 'deliveryNotification' : 'deliveryReply')} #${receipt.id}`));
+    const facts = [['provider_accepted', 'deliveryReceiptAccepted'], ['provider_sent', 'deliveryReceiptSent'], ['device_delivered', 'deliveryReceiptDelivered'], ['device_read', 'deliveryReceiptRead'], ['provider_failed', 'deliveryReceiptFailed']];
+    row.append(element('p', facts.map(([field, label]) => `${t(label)}: ${t(receipt[field] ? 'deliveryYes' : 'deliveryNo')}`).join(' · '), 'muted'));
+    $('delivery-receipts').append(row);
+  }
+}
 function translatePage() {
   document.documentElement.lang = locale === 'en' ? 'en' : 'es-CL';
   document.title = t('title');
@@ -103,7 +187,17 @@ function translatePage() {
   renderDashboard();
   catalogPanel.render();
 }
-async function refresh() { dashboard = await api('/api/dashboard'); connected = true; renderDashboard(); }
+async function refresh() {
+  const version = ++refreshVersion;
+  const requestToken = token;
+  const nextDashboard = await api('/api/dashboard');
+  const nextDelivery = nextDashboard.persistence === 'postgres' ? await Promise.all([api('/api/whatsapp/delivery'), api('/api/whatsapp/delivery/jobs'), api('/api/whatsapp/delivery/receipts'), api('/api/whatsapp/support')]) : null;
+  if (requestToken !== token || version !== refreshVersion) return;
+  dashboard = nextDashboard;
+  delivery = nextDelivery ? { summary: nextDelivery[0], list: nextDelivery[1], receipts: nextDelivery[2], support: nextDelivery[3] } : null;
+  connected = true;
+  renderDashboard();
+}
 async function send(text) {
   if (!token) throw new Error(t('accessFirst'));
   const language = locale;
@@ -118,6 +212,7 @@ $('access-form').addEventListener('submit', event => {
   catalogPanel.clear();
   connected = false;
   dashboard = null;
+  delivery = null;
   customerId = `demo-${crypto.randomUUID()}`;
   $('messages').replaceChildren(element('p', t('chatHint'), 'chat-hint'));
   renderDashboard();
@@ -135,6 +230,7 @@ $('chat-form').addEventListener('submit', event => {
 });
 document.querySelectorAll('[data-message]').forEach(button => button.addEventListener('click', () => guard(() => send(t('commands')[button.dataset.message]))));
 $('refresh').addEventListener('click', () => guard(refresh));
+$('refresh-delivery').addEventListener('click', () => guard(refresh));
 $('language').addEventListener('change', () => {
   locale = $('language').value === 'en' ? 'en' : 'es';
   try { localStorage.setItem('easy-eatery-language', locale); } catch {}

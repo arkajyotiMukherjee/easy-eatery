@@ -89,6 +89,7 @@ export class PostgresRepository {
       if (!result.rows.length) throw new AccessError();
       if (result.rows[0].role === 'viewer' && !action.endsWith('.read')) throw new AccessError(403);
       if (action === 'catalog.replace' && result.rows[0].role !== 'owner') throw new AccessError(403);
+      if (action.startsWith('sandbox.reverse') && result.rows[0].role !== 'owner') throw new AccessError(403);
       return;
     }
     if (identity.phoneId && action.startsWith('whatsapp.')) {
@@ -101,7 +102,7 @@ export class PostgresRepository {
   private async load(client: PoolClient, identity: Scope, branch: any) {
     const scope = [identity.tenantId, identity.branchId];
     const state = new MemoryStore();
-    state.tenant = { id: identity.tenantId, branchId: identity.branchId, name: branch.name, timezone: branch.timezone, payAtPickup: branch.pay_at_pickup, posProvider: branch.pos_provider, modules: branch.modules };
+    state.tenant = { id: identity.tenantId, branchId: identity.branchId, name: branch.name, timezone: branch.timezone, payAtPickup: branch.pay_at_pickup, sandboxCheckout: branch.sandbox_checkout, posProvider: branch.pos_provider, modules: branch.modules };
     state.catalog = { version: branch.catalog_version, source: branch.catalog_source, updatedAt: branch.catalog_updated_at.toISOString() };
     state.availability = branch.service_availability;
     const products = await client.query('SELECT * FROM products WHERE tenant_id=$1 AND branch_id=$2 ORDER BY id', scope);
@@ -146,7 +147,7 @@ export class PostgresRepository {
         const original = before.get(o.id)!;
         if (o.paymentMethod !== original.paymentMethod || o.fulfillment !== original.fulfillment || o.total !== original.total || o.customerId !== original.customerId || o.posProvider !== original.posProvider || o.catalogVersion !== original.catalogVersion || !isDeepStrictEqual(o.lines, original.lines)) throw new Error('Confirmed order snapshot is immutable');
       }
-      if (o.paymentReference) await client.query(`INSERT INTO payment_attempts(tenant_id,branch_id,reference,order_id,provider,amount,currency,status)
+      if (o.paymentReference && o.paymentMethod !== 'webpay_sandbox') await client.query(`INSERT INTO payment_attempts(tenant_id,branch_id,reference,order_id,provider,amount,currency,status)
         VALUES($1,$2,$3,$4,'simulation',$5,$6,$7) ON CONFLICT(tenant_id,branch_id,reference) DO UPDATE SET status=EXCLUDED.status`,
       [...scope, o.paymentReference, o.id, o.total, o.currency, o.paymentState === 'simulated_paid' ? 'simulated_paid' : 'pending']);
       if (before.get(o.id)?.status !== o.status || before.get(o.id)?.paymentState !== o.paymentState) await client.query(`INSERT INTO outbox(tenant_id,branch_id,event_key,event_type,order_id,payload)

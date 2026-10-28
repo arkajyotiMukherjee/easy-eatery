@@ -520,9 +520,18 @@
     "github_update_status": "blocked_api_proxy_forbidden",
     "pending_updates": "docs/issue-evidence.md",
     "implemented_slices": [
-      "P10: scoped staff delivery recovery; provider callbacks and acceptance remain open",
-      "P14: disconnected sandbox adapter with mock HTTP coverage; hosted checkout remains unproved",
-      "P18/P20/P21/P24: repeatable local bilingual HTTP rehearsal and operations runbook; external acceptance remains open"
-    ]
+      "P10/P12: scoped recovery, signed status evidence, verified reply/notification windows and redacted human handoff; real-phone acceptance and retention remain open",
+      "P14/P15/P17/P24: opt-in durable sandbox checkout/local ticket/status/full test reversal, fixture and browser evidence; real hosted success and merchant settlement remain open",
+      "P13/P22/P23: factual provider access matrix and synthetic port tests; no vendor contracts or kitchen acceptance claimed",
+      "P18/P20/P21: bilingual staff controls, HTTP/browser/image/isolated restore evidence and operations runbook; restaurant feedback, retention policy and paid staging remain gated"
+    ],
+    "validation": {
+      "application_tests": 28,
+      "postgres_tap_results": 43,
+      "http_rehearsal_modes": 3,
+      "chromium": "ES/EN owner/operator/viewer desktop/mobile; fake sandbox POST/reversal",
+      "packaging": "nonroot image HTTP lifecycle passed",
+      "restore": "disposable PostgreSQL only"
+    }
   }
 }

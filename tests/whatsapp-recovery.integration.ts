@@ -51,10 +51,10 @@ test('staff recovery preserves scope, conversation ordering and uncertain-send b
     payload: action === 'retry' ? { expectedState: 'failed', expectedVersion } : { expectedState: 'needs_attention', expectedVersion, confirmation: 'reviewed_without_resend' },
   });
   await queue.enqueue(identity, [
-    { id: 'ambiguous', from: 'uncertain-contact', text: 'hello' },
-    { id: 'later', from: 'uncertain-contact', text: '1' },
-    { id: 'rejected', from: 'rejected-contact', text: 'hello' },
-    { id: 'independent', from: 'independent-contact', text: 'hello' },
+    { id: 'ambiguous', from: 'uncertain-contact', text: 'hello', timestamp: Math.floor(Date.now() / 1000) },
+    { id: 'later', from: 'uncertain-contact', text: '1', timestamp: Math.floor(Date.now() / 1000) },
+    { id: 'rejected', from: 'rejected-contact', text: 'hello', timestamp: Math.floor(Date.now() / 1000) },
+    { id: 'independent', from: 'independent-contact', text: 'hello', timestamp: Math.floor(Date.now() / 1000) },
   ]);
   await queue.tick();
   const jobs = (await pool.query('SELECT id::text,message_id,state FROM whatsapp_jobs WHERE tenant_id=$1', [scope.tenantId])).rows;
@@ -95,7 +95,7 @@ test('staff recovery preserves scope, conversation ordering and uncertain-send b
     await new WhatsAppQueue(repository, transport, '701').tick();
     assert.equal((await pool.query("SELECT state FROM whatsapp_jobs WHERE message_id='later'")).rows[0].state, 'sent');
     assert.deepEqual((await pool.query("SELECT cart FROM conversations WHERE tenant_id='recovery' AND customer_id='uncertain-contact'")).rows[0].cart, [['1',1]]);
-    await queue.enqueue(identity, [{ id: 'ambiguous', from: 'uncertain-contact', text: 'hello' }]);
+    await queue.enqueue(identity, [{ id: 'ambiguous', from: 'uncertain-contact', text: 'hello', timestamp: Math.floor(Date.now() / 1000) }]);
     await queue.tick();
     assert.equal(sends.filter(s => s === 'uncertain-contact').length, 2); // Original ambiguous attempt + later message only.
     assert.equal((await pool.query('SELECT count(*) FROM orders')).rows[0].count, '0');
@@ -124,7 +124,7 @@ test('staff recovery preserves scope, conversation ordering and uncertain-send b
   });
 
   await t.test('processing failure retries domain work instead of sending an absent reply', async () => {
-    await queue.enqueue(identity, [{ id: 'processing', from: 'processing-contact', text: 'hello' }]);
+    await queue.enqueue(identity, [{ id: 'processing', from: 'processing-contact', text: 'hello', timestamp: Math.floor(Date.now() / 1000) }]);
     const row = (await pool.query("UPDATE whatsapp_jobs SET state='failed',attempts=5,error_code='processing_failed' WHERE message_id='processing' RETURNING id::text")).rows[0];
     const response = await request(row.id, 'retry');
     assert.equal(response.statusCode, 200);

@@ -1,10 +1,10 @@
 # Durable WhatsApp exception recovery
 
-This developer-assisted recovery API is available in PostgreSQL mode after applying migration 005. It does not provide a staff dashboard, provider delivery-status reconciliation or ready notifications. The normal worker must run to process any work released by recovery. Use an individual scoped owner/operator token; a viewer can inspect the redacted list but cannot mutate jobs. Tokens and active membership are checked again inside each transaction.
+This developer-assisted recovery API is available in PostgreSQL mode after applying migration 005. The PostgreSQL staff dashboard provides the same redacted recovery controls. Separate signed receipt evidence and service-window notifications are described in `whatsapp-delivery-status.md` and `whatsapp-support.md`. The normal worker must run to process any work released by recovery. Use an individual scoped owner/operator token; a viewer can inspect the redacted list but cannot mutate jobs. Tokens and active membership are checked again inside each transaction.
 
 ## Inspect and choose the safe action
 
-`GET /api/whatsapp/delivery/jobs` returns the oldest 100 `failed` or `needs_attention` jobs for the authenticated branch. It includes job ID, state, recovery version, attempt count, bounded error code and timestamps. Sender addresses, phone/account identifiers, inbound text, reply text and provider IDs are excluded. Resolve older exceptions before requesting the list again when more than 100 need attention.
+`GET /api/whatsapp/delivery/jobs` returns the oldest 100 `failed` or `needs_attention` jobs for the authenticated branch. It includes job ID, state, recovery version, attempt count, bounded error code and timestamps. `customer_window_closed` means staff follow-up is required; it is not proof of provider rejection or an uncertain send. Sender addresses, phone/account identifiers, inbound text, reply text and provider IDs are excluded. Resolve older exceptions before requesting the list again when more than 100 need attention.
 
 The list is a queue diagnostic, not proof of provider or device delivery. Investigate the operational cause using authorized provider tools and an appropriate private support process. Do not put customer conversations or credentials into issues, logs or this repository. This API deliberately cannot blindly resend an ambiguous job.
 

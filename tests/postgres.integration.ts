@@ -46,7 +46,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
   };
 
   await t.test('migration/seed is repeatable and tokens are hashed and restaurant scoped', async () => {
-    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '5');
+    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '8');
     await seedBranch(pool, a, 'Ignored new name', 'fudo', '111');
     assert.equal((await pool.query('SELECT count(*) FROM products')).rows[0].count, '9');
     const identity = await repository.authenticate(owner.token);
@@ -161,7 +161,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
   await t.test('signed callbacks map receiving phone IDs server-side and survive replay after restart', async () => {
     const sent: string[] = [];
     const config = { repository, appSecret: 'test-app-secret', phoneId: '111', transport: { sendText: async (_to: string, text: string) => { sent.push(text); } } };
-    const payload = (phone: string) => JSON.stringify({ object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: phone }, messages: [{ id: 'callback-one', from: 'callback-customer', type: 'text', text: { body: '2' } }] } }] }] });
+    const payload = (phone: string) => JSON.stringify({ object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: phone }, messages: [{ id: 'callback-one', from: 'callback-customer', timestamp: String(Math.floor(Date.now() / 1000)), type: 'text', text: { body: '2' } }] } }] }] });
     const deliver = (target: ReturnType<typeof createApp>, body: string) => target.app.inject({ method: 'POST', url: '/webhooks/whatsapp', headers: { 'content-type': 'application/json', 'x-hub-signature-256': 'sha256=' + createHmac('sha256', 'test-app-secret').update(body).digest('hex') }, payload: body });
     const first = createApp(config);
     assert.equal((await deliver(first, payload('222'))).statusCode, 200);
@@ -289,8 +289,8 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
       return {id:'provider-'+attempts.length};
     }};
     const queue=new WhatsAppQueue(repository,transport,'444');
-    await Promise.all([queue.enqueue(identity,[{id:'one',from:'retry-person',text:'1'}]),queue.enqueue(identity,[{id:'one',from:'retry-person',text:'1'}])]);
-    await queue.enqueue(identity,[{id:'two',from:'retry-person',text:'confirm'},{id:'other',from:'other-person',text:'hello'},{id:'uncertain',from:'uncertain-person',text:'hello'}]);
+    await Promise.all([queue.enqueue(identity,[{id:'one',from:'retry-person',text:'1', timestamp: Math.floor(Date.now() / 1000) }]),queue.enqueue(identity,[{id:'one',from:'retry-person',text:'1', timestamp: Math.floor(Date.now() / 1000) }])]);
+    await queue.enqueue(identity,[{id:'two',from:'retry-person',text:'confirm', timestamp: Math.floor(Date.now() / 1000) },{id:'other',from:'other-person',text:'hello', timestamp: Math.floor(Date.now() / 1000) },{id:'uncertain',from:'uncertain-person',text:'hello', timestamp: Math.floor(Date.now() / 1000) }]);
     await Promise.all([queue.tick(),new WhatsAppQueue(repository,transport,'444').tick()]);
     let rows=await pool.query('SELECT message_id,state,attempts FROM whatsapp_jobs WHERE tenant_id=$1 ORDER BY id',[scope.tenantId]);
     assert.equal(rows.rows.length,4);
@@ -306,7 +306,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
     await queue.tick();
     assert.equal(attempts.length,sendCount); // Unknown sends are never replayed automatically.
     // Crash after claiming but before sending: expiration is also uncertain, not a new send.
-    await queue.enqueue(identity,[{id:'crash',from:'crash-person',text:'hello'}]);
+    await queue.enqueue(identity,[{id:'crash',from:'crash-person',text:'hello', timestamp: Math.floor(Date.now() / 1000) }]);
     await queue.processOne(identity);
     await pool.query("UPDATE whatsapp_jobs SET state='sending',lease_until=now()-interval '1 minute' WHERE tenant_id=$1 AND message_id='crash'",[scope.tenantId]);
     await queue.tick();
@@ -327,12 +327,12 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
     await seedBranch(pool,scope,'Failure Test','toteat','555');
     const identity=(await repository.channelIdentity('555'))!;
     const queue=new WhatsAppQueue(repository,{sendText:async()=>{}},'555');
-    await queue.enqueue(identity,[{id:'item',from:'person',text:'1'}]);
+    await queue.enqueue(identity,[{id:'item',from:'person',text:'1', timestamp: Math.floor(Date.now() / 1000) }]);
     await queue.tick();
     await pool.query(`CREATE FUNCTION reject_queue_order() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
       IF NEW.tenant_id='queue-failure' THEN RAISE EXCEPTION 'synthetic failure'; END IF; RETURN NEW; END $$`);
     await pool.query('CREATE TRIGGER reject_queue_order BEFORE INSERT ON orders FOR EACH ROW EXECUTE FUNCTION reject_queue_order()');
-    await queue.enqueue(identity,[{id:'confirm',from:'person',text:'confirm'}]);
+    await queue.enqueue(identity,[{id:'confirm',from:'person',text:'confirm', timestamp: Math.floor(Date.now() / 1000) }]);
     for(let i=0;i<5;i++) {
       await pool.query("UPDATE whatsapp_jobs SET available_at=now() WHERE tenant_id=$1 AND state='pending'",[scope.tenantId]);
       await queue.tick();

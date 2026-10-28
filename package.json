@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node --watch --import tsx --env-file-if-exists=.env apps/server/src/index.ts",
     "start": "node --import tsx --env-file-if-exists=.env apps/server/src/index.ts",
-    "check": "tsc --noEmit && node --check apps/server/public/app.js && node --check apps/server/public/i18n.js && node --check apps/server/public/catalog-ui.js",
+    "check": "tsc --noEmit && node --check apps/server/public/app.js && node --check apps/server/public/i18n.js && node --check apps/server/public/catalog-ui.js && node --check apps/server/public/sandbox-ui.js",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:db": "node --import tsx --env-file-if-exists=.env --test tests/*.integration.ts",
     "db:migrate": "node --import tsx --env-file-if-exists=.env scripts/database.ts migrate",

@@ -41,6 +41,18 @@
         <div class="module-note"><span class="check">✓</span><div><strong data-i18n="moduleStatus">WhatsApp activo · menú QR desactivado</strong><p data-i18n="moduleHint">El catálogo y los pedidos son capacidades compartidas. Cada servicio se puede activar por separado.</p></div></div>
       </section>
     </div>
+    <section id="delivery-panel" class="panel delivery-panel" aria-labelledby="delivery-title" hidden>
+      <div class="section-heading"><h2 id="delivery-title" data-i18n="deliveryTitle">Excepciones de mensajes</h2><button type="button" id="refresh-delivery" class="secondary" data-i18n="refresh">Actualizar</button></div>
+      <p class="muted" data-i18n="deliveryHint">Revisa las excepciones antes de continuar. La aceptación del proveedor no confirma la entrega al dispositivo.</p>
+      <p id="delivery-counts" role="status" class="muted"></p>
+      <div id="delivery-jobs" aria-live="polite"></div>
+      <h3 data-i18n="deliveryReceiptsTitle">Evidencia de entrega del proveedor</h3>
+      <p class="muted" data-i18n="deliveryReceiptsHint">Los eventos firmados registran evidencia independiente. La ausencia de un evento no prueba que la entrega haya fallado.</p>
+      <div id="delivery-receipts"></div>
+      <h3 data-i18n="supportTitle">Solicitudes de ayuda</h3>
+      <p class="muted" data-i18n="supportHint">La revisión no confirma que alguien contactó al cliente.</p>
+      <div id="support-items" aria-live="polite"></div>
+    </section>
     <section class="panel catalog-panel" aria-labelledby="catalog-title">
       <div class="section-heading"><div><p class="eyebrow" data-i18n="catalogEyebrow">03 / CATÁLOGO Y DISPONIBILIDAD</p><h2 id="catalog-title" data-i18n="catalogTitle">Menú del restaurante</h2></div><button type="button" id="load-catalog" class="secondary" data-i18n="loadCatalog">Cargar catálogo</button></div>
       <p class="muted" data-i18n="catalogHint">Controla los productos disponibles y el horario de retiro. Los estados del turno son confirmados por el personal.</p>

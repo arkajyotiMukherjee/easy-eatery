@@ -1,11 +1,13 @@
 FROM node:24-bookworm-slim
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci && npm cache clean --force
-COPY tsconfig.json ./
-COPY apps ./apps
-COPY migrations ./migrations
-COPY scripts ./scripts
+COPY --chown=node:node package.json package-lock.json ./
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    npm ci --no-audit --no-fund && npm cache clean --force
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node apps ./apps
+COPY --chown=node:node migrations ./migrations
+COPY --chown=node:node scripts ./scripts
 ENV HOST=0.0.0.0
 ENV PORT=8080
 USER node
