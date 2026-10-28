@@ -3,13 +3,28 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "node --watch --import tsx --env-file-if-exists=.env apps/server/src/index.ts",
     "start": "node --import tsx --env-file-if-exists=.env apps/server/src/index.ts",
     "check": "tsc --noEmit && node --check apps/server/public/app.js && node --check apps/server/public/i18n.js",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:db": "node --import tsx --env-file-if-exists=.env --test tests/postgres.integration.ts",
+    "db:migrate": "node --import tsx --env-file-if-exists=.env scripts/database.ts migrate",
+    "db:seed": "node --import tsx --env-file-if-exists=.env scripts/database.ts seed",
+    "db:staff": "node --import tsx --env-file-if-exists=.env scripts/database.ts staff",
+    "db:revoke": "node --import tsx --env-file-if-exists=.env scripts/database.ts revoke"
   },
-  "dependencies": { "fastify": "^5.6.1" },
-  "devDependencies": { "@types/node": "^24.0.0", "tsx": "^4.20.0", "typescript": "^5.9.0" }
+  "dependencies": {
+    "fastify": "^5.6.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
 }

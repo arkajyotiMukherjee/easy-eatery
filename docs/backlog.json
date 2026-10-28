@@ -112,7 +112,9 @@
         "Run documented checks and demonstrate a restart resets data; never describe this in-memory baseline as pilot-ready.",
         "Provide Spanish-default and English UI/conversation support with an explicit language selector, locale-aware CLP formatting and no cart loss when changing language."
       ],
-      "doc": "README.md"
+      "doc": "README.md",
+      "status": "completed",
+      "completedBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/24"
     },
     {
       "id": "P06",
@@ -130,7 +132,8 @@
         "Test cross-tenant reads/writes and provider callbacks cannot access another restaurant; no tenant ID accepted from a customer's message.",
         "Verify restart recovery and transaction rollback. Replace shared demo key with real staff authentication before staging handles customer data."
       ],
-      "doc": "docs/architecture.md"
+      "doc": "docs/postgres-storage.md",
+      "status": "in_review"
     },
     {
       "id": "P07",

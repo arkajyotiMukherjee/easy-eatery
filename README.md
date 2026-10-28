@@ -2,7 +2,7 @@
 
 Modular restaurant SaaS, starting with **WhatsApp pickup ordering for one restaurant in Chile**. Shared catalog and ordering capabilities do not require a QR-menu subscription.
 
-This initial setup includes a runnable **Spanish-default and English demo**, a test-account WhatsApp Cloud API transport, architecture and pilot documentation, and **23 GitHub issues across five milestones**. Both **Toteat and Fudo** are required for the initial pilot. Payment and POS adapters are **simulated** in this setup. Data is held in memory and resets on restart. This is a customer discovery demo; the real-provider pilot is tracked in the backlog.
+This setup includes a runnable **Spanish-default and English demo**, an optional **PostgreSQL mode with individual staff access**, a test-account WhatsApp Cloud API transport, and **23 GitHub issues across five milestones**. Both **Toteat and Fudo** are required for the initial pilot. Payment and POS adapters remain **simulated**. Default memory mode resets on restart; PostgreSQL mode preserves restaurant data. The real-provider pilot is tracked in the backlog.
 
 ## Run the demo
 
@@ -29,11 +29,41 @@ The simulation payment reference points to the panel; it is not a hosted checkou
 
 Set `POS_PROVIDER=toteat` (default) or `fudo` in `.env` to choose the simulated provider label. Both real adapters require provider access and implementation in #13/#22/#23. If port 3000 is occupied, set `PORT=3311` and open that port instead.
 
+## PostgreSQL and individual staff access
+
+For durable local data, set `PERSISTENCE=postgres`, `LOCAL_POSTGRES_PASSWORD` to a random local password, and `DATABASE_URL` to `postgresql://easy_eatery:<URL-encoded-password>@127.0.0.1:55432/easy_eatery` in `.env`. Docker Compose uses the password from that file; the application uses the connection URL. Keep both private.
+
+```sh
+docker compose up -d --wait postgres
+npm run db:migrate
+npm run db:seed
+npm run db:staff -- santiago-demo main owner "Restaurant Owner"
+npm start
+```
+
+Use the **individual token** printed by `db:staff` in the existing panel key field. Only its SHA-256 hash is stored in the database. It expires after seven days. Owner/operator tokens can perform demo order actions; viewer tokens can only read the dashboard. PostgreSQL mode **ignores `ADMIN_TOKEN`**. The restaurant/branch comes from the credential, never a request header or customer message. Seeds preserve existing catalog/account settings.
+
+```sh
+npm run db:staff -- santiago-demo main operator "Kitchen Staff"
+npm run db:staff -- santiago-demo main viewer "Read-only Staff"
+npm run db:revoke -- <token-id>
+```
+
+See [PostgreSQL setup and access design](docs/postgres-storage.md) for another restaurant/branch, sender mapping, migrations, revocation, testing, and operational limits. In PostgreSQL mode the POS selection is stored per branch, so `POS_PROVIDER` does not override database settings.
+
 ```sh
 npm run check
 npm test
 npm run dev
 ```
+
+Run the real database suite explicitly against a development/test database using `TEST_DATABASE_URL` (same URL format as above):
+
+```sh
+npm run test:db
+```
+
+It creates and removes a randomly named isolated test schema. CI runs both suites with PostgreSQL 17, including tenant/branch isolation, rollback, revocation, concurrent replay and restart recovery in a fresh Node process.
 
 ## Project map
 
@@ -46,7 +76,7 @@ npm run dev
 | Tests | `tests` | Ordering, replay, isolation between conversations, auth, signatures and delivery retry |
 | Delivery plan | `docs` | Scope, decisions, integrations, pilot guide and linked issue backlog |
 
-The long-term baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run and Cloud SQL in Santiago. The first setup deliberately uses a small Fastify server and browser-native UI; React/Next.js can be added when the owner UI needs it without changing shared domain services. PostgreSQL durability, real staff auth and asynchronous webhook processing are required before pilot traffic.
+The deployment baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run and Cloud SQL in Santiago. The server uses Fastify and browser-native UI; React/Next.js can be added without changing domain services. PostgreSQL durability and scoped staff authentication are implemented; asynchronous webhook processing and real-provider payment/POS reconciliation are still required before pilot traffic.
 
 ## Read next
 
@@ -58,7 +88,7 @@ The long-term baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run a
 
 ## HTTP surface
 
-All `/api/*` routes require `Authorization: Bearer <ADMIN_TOKEN>`. The panel holds that key only in page memory; no cookies or browser storage. The demo serves only known static assets.
+All `/api/*` routes require `Authorization: Bearer <token>`: the local `ADMIN_TOKEN` in memory mode, or an active restaurant-scoped staff token in PostgreSQL mode. The panel holds it only in page memory. PostgreSQL mode checks membership/expiry/revocation on every request and enforces roles again inside the transaction. The demo serves only known static assets.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
@@ -70,4 +100,4 @@ All `/api/*` routes require `Authorization: Bearer <ADMIN_TOKEN>`. The panel hol
 | GET | `/webhooks/whatsapp` | Meta verification challenge |
 | POST | `/webhooks/whatsapp` | Signed, mapped test-account messages; available only with configured Cloud transport |
 
-Do not point a real payment webhook at the demo payment endpoint. Do not deploy the current in-memory app for paying customers. Production-mode provider adapters and disabling demo mutations are explicit [pilot deployment requirements](https://github.com/arkajyotiMukherjee/easy-eatery/issues/19).
+Do not point a real payment webhook at the demo payment endpoint. Durable storage does not turn the simulated financial workflow into a live payment system. Real adapters, asynchronous delivery/reconciliation and disabling demo mutations are explicit [pilot deployment requirements](https://github.com/arkajyotiMukherjee/easy-eatery/issues/19).

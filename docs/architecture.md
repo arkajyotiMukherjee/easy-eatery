@@ -24,7 +24,7 @@ flowchart LR
 
 Only WhatsApp ordering is enabled for the demo tenant; QR is disabled. Future QR, web ordering and loyalty use shared services and events, never depend on an enabled WhatsApp service. Entitlement changes control access to services, not ownership/deletion of catalog or order data.
 
-## Current implementation and deliberate boundaries
+## Original prototype and durable extension
 
 - `platform/domain.ts`: demo tenant, catalog, session/cart and order snapshots. One process-local repository.
 - `platform/ordering.ts`: confirmation, simulated payment/POS and allowed operational transitions.
@@ -33,7 +33,7 @@ Only WhatsApp ordering is enabled for the demo tenant; QR is disabled. Future QR
 - `integrations/whatsapp.ts`: Cloud API sending, raw-byte signature helper and mapped-message normalization.
 - `app.ts`: schema validation, bearer-protected demo APIs, static asset allowlist, security headers and webhook ingress.
 
-Demo duplicate detection and mock POS idempotency work only within a process lifetime. WhatsApp delivery currently happens before the webhook returns; failures receive 5xx and replay reuses the cached domain reply. This is intentionally a test-account scaffold. Restart-safe ingress, distributed concurrency and delivery ambiguity need #6/#8/#10. Memory Maps have no retention pruning beyond session expiry on access; use test data only. The current mock provider cannot exercise real provider timeout ambiguity or financial correctness.
+In the original memory mode, demo duplicate detection and mock POS idempotency work only within a process lifetime. WhatsApp delivery currently happens before the webhook returns; failures receive 5xx and replay reuses the cached domain reply. This is intentionally a test-account scaffold. Restart-safe ingress, distributed concurrency and delivery ambiguity need #6/#8/#10. Memory Maps have no retention pruning beyond session expiry on access; use test data only. The current mock provider cannot exercise real provider timeout ambiguity or financial correctness.
 
 The browser UI uses native HTML/CSS/JavaScript and semantic forms. It sends a page-memory bearer token, uses text-only DOM insertion, and makes no automatic third-party requests. Its local key is temporary demo access, not the owner/staff identity system. All demo order endpoints are isolated under `/api/demo`. A deployed pilot must use real staff authentication and disable all simulation mutations.
 
@@ -79,3 +79,7 @@ No cloud resource is provisioned by this setup. The included Dockerfile runs the
 ## Observability and required verification
 
 Log correlation IDs, order IDs, provider outcome class, latency and retry count. Exclude message bodies, customer identifiers, credentials and checkout URLs. Alert on paid-but-unaccepted backlog, dead letters, provider errors and stale status sync. Test duplicates/concurrency, restart recovery, tenant isolation, price changes, forged callbacks, mismatched payment amounts, unknown POS outcomes, refunds and local-date metrics. Keep automated tests small and focused on these failure boundaries.
+
+## PostgreSQL and access implementation (#6)
+
+Optional PostgreSQL mode now implements transactional restaurant/branch repositories, migrations/seed, scoped staff tokens/roles, durable sessions/orders/line snapshots/payment references, inbox/outbox and audit records. See [the storage and access design](postgres-storage.md) for setup, isolation guarantees, restart tests and limits. Asynchronous messaging workers, quote/version contracts and real-provider financial reconciliation remain separate issues.

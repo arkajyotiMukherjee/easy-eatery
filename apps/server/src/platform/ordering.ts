@@ -41,7 +41,7 @@ export class OrderingService {
   }
 
   dashboard() {
-    const orders = [...this.store.orders.values()].filter(o => o.tenantId === this.store.tenant.id);
+    const orders = [...this.store.orders.values()].filter(o => o.tenantId === this.store.tenant.id && o.branchId === this.store.tenant.branchId);
     return {
       tenant: this.store.tenant,
       mode: 'simulation',

@@ -16,7 +16,7 @@ Run the application using the README. Use synthetic customer data. Spanish is th
 | Collect | Confirmar retiro | Confirm pickup | Collected count increases; revenue remains CLP 11,500 |
 | Repeat | `nuevo` | `new` | Empty cart for another order after payment |
 
-Re-send confirmation before payment: the same order is recovered, with no second kitchen submission. Attempt to mark an unpaid order ready: the API rejects it. Show the QR-module-disabled note to explain shared catalog independence. Set `POS_PROVIDER=fudo` and restart to demonstrate the same local mock flow labeled Fudo; default is Toteat. **Neither mode calls a real POS**. Restarting clears all demo records.
+Re-send confirmation before payment: the same order is recovered, with no second kitchen submission. Attempt to mark an unpaid order ready: the API rejects it. Show the QR-module-disabled note to explain shared catalog independence. Set `POS_PROVIDER=fudo` and restart to demonstrate the same local mock flow labeled Fudo; default is Toteat. **Neither mode calls a real POS**. Restarting clears records in memory mode; PostgreSQL mode preserves them and uses scoped staff tokens.
 
 Ask the restaurant to validate its actual menu, modifiers, pickup promise, busy/closed handling and staff responsibility. Record objections and changes in #4 rather than building the full platform. A visually complete simulation is enough for initial feedback, while a pilot requires the real-provider gates below.
 
@@ -51,4 +51,4 @@ Record owner feedback and agreed baseline measures: completion rate, missed/dupl
 
 ## Validation record for this foundation
 
-Automated coverage checks the simulation loop, amount/state boundaries, duplicate inbound handling, separate customer carts, schema/auth, signature validation and delivery retry. Cloud credentials, real checkout, both real POS systems, restart recovery and cloud infrastructure are not verified by those tests. Use the GitHub acceptance checklists to record external evidence later.
+Automated coverage checks the simulation loop, amount/state boundaries, duplicate inbound handling, separate customer carts, schema/auth, signature validation and delivery retry. The separate PostgreSQL suite verifies restart recovery, rollback and tenant/branch access. Cloud credentials, real checkout, both real POS systems and cloud infrastructure are not verified by these tests. Use the GitHub acceptance checklists to record external evidence later.
