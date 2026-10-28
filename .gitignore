@@ -5,3 +5,8 @@ node_modules/
 coverage/
 *.log
 .DS_Store
+.graphify-venv/
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/context-meta.json
