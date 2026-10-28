@@ -1,7 +1,7 @@
 {
   "artifact_hashes": {
-    "graphify-out/GRAPH_REPORT.md": "74c752b185bca9f32196381b39c18d7e21052d1ccf45ec3e0ff27ef16a42d213",
-    "graphify-out/graph.json": "f3c99248e3aa821c365fd2806530d52dc466489b21bf3d8538a8660cd69eba60"
+    "graphify-out/GRAPH_REPORT.md": "3590a94629a9dc7750cdb31011b943fc112e8dd3c3d166cf4742af49813a832b",
+    "graphify-out/graph.json": "a7e01c9b8286bc11e84f81c37c4049c2ca6e808842b8fabb72452fd4b611fef7"
   },
   "format_version": 1,
   "graphify_version": "0.9.97",
@@ -13,6 +13,7 @@
     ".github/workflows/ci.yml": "afb0ee2be870ff5e955c5b4cc16c04b6781bb559e25afdfb19d870e7fd03d5c2",
     ".gitignore": "821162cc607ed11c7cddcfa234e56f8b0bce7aaa385c52fdb07aaf89b398506f",
     "AGENTS.md": "654608696d3c66ea69ad6c754d3a58d3c39dbba9063b2f4f9226c0b8a85191dc",
+    "Dockerfile": "883da96f4461d5fc13af59002d916ca72664fdf996e0a5432d1c48be4d07f94f",
     "README.md": "c8dd3c8f8162d49db797395477117e6373bcacfd9531617b18d120cb10b1bfcd",
     "apps/server/AGENTS.md": "b17cccfcab7f7d023caa29a3e84df2407efcedf5283eb141aa8da1b3fc309470",
     "apps/server/public/AGENTS.md": "e0f77882144eeb64857ad0974b227686c95b6184d37fff3fe2ebcd7b508071c9",
@@ -37,6 +38,7 @@
     "apps/server/src/platform/domain.ts": "85b5809ae05824c123dd2e2a72e9e383496934080fd73667820359cf1293ae70",
     "apps/server/src/platform/i18n.ts": "809e984d0d8d0e98373671422ba93ce7acaa4110c58a7176b357e708759419c7",
     "apps/server/src/platform/ordering.ts": "d6f2bf392e9d286963f75c61656c4c19e0353ee5ff72646232517c53ab968e30",
+    "compose.yaml": "7317ef25c3e55fe7d239ab20ca85c0e2d2b3bf24565b8387e833d2c6afda2ef3",
     "docs/AGENTS.md": "f8952383b79995e0f77bf16010f8c4fac0bf18ed963027101d833b1bf503d356",
     "docs/architecture.md": "db506d9bc57d64c8c8c25c3afc639f88465fa5089bbb2da2c45692f9558a9dce",
     "docs/backlog.json": "71de0179a145e9f96e217a90764e737a8042007c2fa6040df8cfd27ba469aedd",
@@ -61,7 +63,7 @@
     "scripts/AGENTS.md": "c33f48bb678de97a5197e5f204eec6b27be69b81e45cd80c84f5731716c3e9d2",
     "scripts/database.ts": "6e9f4a3ce3612547399b261a318a697cb13507c819ec0849ac94525e7d00e68c",
     "scripts/import-catalog.ts": "eac9778d6b26874484ae192f2683f58f80c57f8e487c2e78c621dfbfb73ce610",
-    "scripts/update-context.py": "3c4cd551ae4c76990c745f02a90b2c8a82beef22c671ba2ae836109728872972",
+    "scripts/update-context.py": "5159fae80ceb21b56534f8799b6cf69cb352d2e85c12c2d90b4f0f425b5c1a84",
     "tests/AGENTS.md": "8ed820dcd4e25c81ac1ffeb105d977b348f65cbf24e78884fd570668e4f10806",
     "tests/catalog.test.ts": "35578c95e2660a0b3323516dbf12ed4a54f9dfad895704da7b8199abed275bed",
     "tests/pickup.test.ts": "f3f0352978be7c5302168adc6104c50227614b13222508043e4d28cdfbb6ad44",

@@ -20,8 +20,8 @@ def sources():
         p = ROOT / name
         if not name or not p.is_file() or name.startswith(('graphify-out/', '.codex/', '.graphify-venv/')):
             continue
-        selected = name in ('AGENTS.md', 'README.md', 'package.json', 'package-lock.json', 'tsconfig.json', '.env.example', '.gitignore', '.dockerignore') or name.startswith(('apps/', 'scripts/', 'tests/', 'migrations/', 'docs/', '.github/'))
-        if selected and (p.suffix in ('.md', '.ts', '.js', '.css', '.html', '.sql', '.json', '.py', '.yml', '.yaml') or name.startswith('.')):
+        selected = '/' not in name or name.startswith(('apps/', 'scripts/', 'tests/', 'migrations/', 'docs/', '.github/'))
+        if selected and (p.suffix in ('.md', '.ts', '.js', '.css', '.html', '.sql', '.json', '.py', '.yml', '.yaml') or '/' not in name):
             result[name] = hashlib.sha256(p.read_bytes()).hexdigest()
     return result
 
