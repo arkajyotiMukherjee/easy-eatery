@@ -9,6 +9,7 @@ import { parseMessages, validSignature } from './integrations/whatsapp.ts';
 import { errors, localeFrom, type Locale } from './platform/i18n.ts';
 import { AccessError, type Identity, type PostgresRepository } from './persistence/database.ts';
 import { WhatsAppQueue } from './persistence/whatsapp-queue.ts';
+import { WhatsAppRecovery } from './persistence/whatsapp-recovery.ts';
 import { CatalogService } from './platform/catalog.ts';
 
 export type Config = { payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
@@ -159,6 +160,31 @@ export function createApp(config: Config, store = new MemoryStore()) {
       const result = await client.query('SELECT state,count(*)::integer AS count FROM whatsapp_jobs WHERE tenant_id=$1 AND branch_id=$2 GROUP BY state', [identity.tenantId,identity.branchId]);
       return { mode: 'durable', counts: result.rows };
     });
+  });
+  const recovery = config.repository ? new WhatsAppRecovery(config.repository) : undefined;
+  app.get('/api/whatsapp/delivery/jobs', async request => {
+    if (!recovery) return { jobs: [], limit: 100 };
+    return recovery.list(identities.get(request)!);
+  });
+  app.post<{ Params: { id: string }; Body: { expectedState: string; expectedVersion: number } }>('/api/whatsapp/delivery/jobs/:id/retry', {
+    schema: {
+      params: { type: 'object', additionalProperties: false, required: ['id'], properties: { id: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } } },
+      body: { type: 'object', additionalProperties: false, required: ['expectedState','expectedVersion'], properties: { expectedState: { const: 'failed' }, expectedVersion: { type: 'integer', minimum: 0, maximum: 2147483646 } } },
+    },
+  }, async request => {
+    if (!recovery) throw Object.assign(new Error('Durable mode required.'), { statusCode: 409 });
+    return recovery.retry(identities.get(request)!, request.params.id, request.body.expectedVersion);
+  });
+  app.post<{ Params: { id: string }; Body: { expectedState: string; expectedVersion: number; confirmation: string } }>('/api/whatsapp/delivery/jobs/:id/resolve', {
+    schema: {
+      params: { type: 'object', additionalProperties: false, required: ['id'], properties: { id: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } } },
+      body: { type: 'object', additionalProperties: false, required: ['expectedState','expectedVersion','confirmation'], properties: {
+        expectedState: { const: 'needs_attention' }, expectedVersion: { type: 'integer', minimum: 0, maximum: 2147483646 }, confirmation: { const: 'reviewed_without_resend' },
+      } },
+    },
+  }, async request => {
+    if (!recovery) throw Object.assign(new Error('Durable mode required.'), { statusCode: 409 });
+    return recovery.resolve(identities.get(request)!, request.params.id, request.body.expectedVersion);
   });
   app.addHook('onClose', async () => { await queue?.stop(); });
   return { app, store, ordering, conversation, queue };

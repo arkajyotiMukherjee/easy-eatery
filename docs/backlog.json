@@ -514,5 +514,15 @@
       "completedImplementationBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/28"
     }
   ],
-  "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations."
+  "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations.",
+  "cloud_delivery_evidence": {
+    "date": "2026-10-28",
+    "github_update_status": "blocked_api_proxy_forbidden",
+    "pending_updates": "docs/issue-evidence.md",
+    "implemented_slices": [
+      "P10: scoped staff delivery recovery; provider callbacks and acceptance remain open",
+      "P14: disconnected sandbox adapter with mock HTTP coverage; hosted checkout remains unproved",
+      "P18/P20/P21/P24: repeatable local bilingual HTTP rehearsal and operations runbook; external acceptance remains open"
+    ]
+  }
 }

@@ -29,7 +29,7 @@ export class WhatsAppQueue {
       const found = await client.query(`SELECT j.* FROM whatsapp_jobs j WHERE j.tenant_id=$1 AND j.branch_id=$2 AND j.phone_id=$3
         AND j.state='pending' AND j.available_at<=now() AND NOT EXISTS (
           SELECT 1 FROM whatsapp_jobs earlier WHERE earlier.tenant_id=j.tenant_id AND earlier.branch_id=j.branch_id
-          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state<>'sent'
+          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state NOT IN ('sent','resolved')
         ) ORDER BY j.id LIMIT 1 FOR UPDATE`, [identity.tenantId, identity.branchId, this.phoneId]);
       const job = found.rows[0];
       if (!job) return false;
@@ -59,7 +59,7 @@ export class WhatsAppQueue {
       const found = await client.query(`SELECT j.* FROM whatsapp_jobs j WHERE j.tenant_id=$1 AND j.branch_id=$2 AND j.phone_id=$3
         AND j.state='reply_pending' AND j.available_at<=now() AND NOT EXISTS (
           SELECT 1 FROM whatsapp_jobs earlier WHERE earlier.tenant_id=j.tenant_id AND earlier.branch_id=j.branch_id
-          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state<>'sent'
+          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state NOT IN ('sent','resolved')
         ) ORDER BY j.id LIMIT 1 FOR UPDATE`, [identity.tenantId, identity.branchId, this.phoneId]);
       const row = found.rows[0];
       if (!row) return undefined;

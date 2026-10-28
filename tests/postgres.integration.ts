@@ -46,7 +46,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
   };
 
   await t.test('migration/seed is repeatable and tokens are hashed and restaurant scoped', async () => {
-    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '4');
+    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '5');
     await seedBranch(pool, a, 'Ignored new name', 'fudo', '111');
     assert.equal((await pool.query('SELECT count(*) FROM products')).rows[0].count, '9');
     const identity = await repository.authenticate(owner.token);

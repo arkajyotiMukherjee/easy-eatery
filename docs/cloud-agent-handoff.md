@@ -64,6 +64,16 @@ Queue behavior: PostgreSQL Cloud ingress commits a unique job before ACK. Proces
 
 Last passing baseline: `npm run check`; 16 application tests; 12 PostgreSQL subtests plus parent (13 TAP results); CI green for merged #29. Local browser rehearsal completed a synthetic CLP 4,500 pay-at-pickup order, checked both languages and recovered the collected order after server restart. These are local/fixture results, not a real WhatsApp or vendor kitchen rehearsal.
 
+## Cloud delivery evidence: 28 October 2026
+
+The cloud checkout began at current `main` commit `0b4070001a734fc6cc66ba630ea78c1ce4a166ab`. This delivery adds migration 005 and authenticated redacted WhatsApp recovery: known failed jobs can be retried; uncertain sends require explicit review without resend and never become delivery receipts. See `docs/whatsapp-recovery.md`. The original PostgreSQL suite passed 13 TAP results and the recovery suite passed six results. The database script selects all `*.integration.ts` files so new coverage runs in CI.
+
+A disconnected Webpay sandbox adapter follows the official Transbank Node SDK contract at `52ad60075ce7d9eacf7f8cc42a795ae43bd483ff`. Five local mock HTTP tests pass for create/commit/status, mismatches, declines, ambiguous errors and hostile inputs. This is boundary coverage only: no actual sandbox checkout, application checkout flow or settlement is proved by this slice.
+
+`scripts/rehearse-demo.ts` exercises real local HTTP processes in Spanish and English for local pay at pickup and both simulated POS labels. See `docs/operations-rehearsal.md` for execution, feedback, staging/rollback and privacy gates. Baseline type checks, 16 application tests, committed context hash checks and an independent HTTP CLP 11,500 ordering/collection rehearsal passed before implementation.
+
+Git HTTPS reads work. The public GitHub issue listing was read on 28 October and showed the outstanding pilot issues open; REST and GraphQL calls to `api.github.com` were denied by the runtime proxy. The required domain was saved in the environment draft, but draft saving does not apply runtime policy. Live issue comments/criteria updates remain blocked; `docs/issue-evidence.md` contains pending truthful updates. No issue is claimed updated or closed. Installation/start instructions were saved for review; publication and fresh-task restoration are not verified.
+
 ## External access and blockers: do not invent missing facts
 
 ### Meta / WhatsApp
