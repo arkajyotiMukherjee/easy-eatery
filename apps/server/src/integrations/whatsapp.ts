@@ -7,6 +7,10 @@ export function validSignature(raw: string, signature: string | undefined, secre
   return timingSafeEqual(Buffer.from(signature.slice(7), 'hex'), Buffer.from(expected, 'hex'));
 }
 
+export class WhatsAppDeliveryError extends Error {
+  constructor(readonly retryable: boolean) { super('WhatsApp request rejected'); }
+}
+
 export class CloudWhatsAppTransport implements WhatsAppTransport {
   constructor(readonly config: { accessToken: string; phoneId: string; version: string }) {
     if (!/^v\d+\.\d+$/.test(config.version) || !/^\d+$/.test(config.phoneId) || !config.accessToken) {
@@ -20,7 +24,10 @@ export class CloudWhatsAppTransport implements WhatsAppTransport {
       headers: { Authorization: `Bearer ${this.config.accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
     });
-    if (!result.ok) throw new Error(`WhatsApp delivery failed (${result.status}); retry required.`);
+    if (!result.ok) throw new WhatsAppDeliveryError(result.status === 429 || result.status >= 500);
+    const body = await result.json() as any;
+    if (typeof body?.messages?.[0]?.id !== 'string') throw new Error('WhatsApp acceptance response missing message ID');
+    return { id: body.messages[0].id as string };
   }
 }
 
@@ -36,7 +43,7 @@ export function parseMessages(payload: unknown, phoneId: string): Inbound[] {
       const value = change?.value;
       if (change?.field !== 'messages' || value?.metadata?.phone_number_id !== phoneId || !Array.isArray(value?.messages)) continue;
       for (const message of value.messages) {
-        if (typeof message?.id !== 'string' || typeof message?.from !== 'string') continue;
+        if (typeof message?.id !== 'string' || !message.id.length || message.id.length > 512 || typeof message?.from !== 'string' || !message.from.length || message.from.length > 64) continue;
         const text = message.type === 'text' ? message.text?.body :
           message.interactive?.list_reply?.id ?? message.interactive?.button_reply?.id ?? 'menú';
         messages.push({ id: message.id, from: message.from, text: typeof text === 'string' ? text.slice(0, 1000) : 'menú' });

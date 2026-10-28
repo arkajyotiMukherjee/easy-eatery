@@ -154,8 +154,9 @@
         "Provide an operator correction flow and test mapping drift, stale catalog and invalid product IDs."
       ],
       "doc": "docs/catalog-and-availability.md",
-      "status": "implementation_in_review",
-      "externalAcceptance": "Requires authorized Toteat/Fudo fixtures and restaurant approval from #2/#4."
+      "status": "implementation_merged_external_acceptance_pending",
+      "externalAcceptance": "Requires authorized Toteat/Fudo fixtures and restaurant approval from #2/#4.",
+      "completedImplementationBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/26"
     },
     {
       "id": "P08",
@@ -213,7 +214,8 @@
         "Persist outbound work, bounded retry/backoff, delivery statuses, dead-letter visibility and message/session retention.",
         "Test batched/status/media payloads, replay, restart, concurrent delivery, expired tokens and provider timeout; no raw bodies or phone numbers in application logs."
       ],
-      "doc": "docs/architecture.md"
+      "doc": "docs/architecture.md",
+      "status": "durable_processing_implemented_status_callbacks_retention_recovery_pending"
     },
     {
       "id": "P11",
@@ -508,7 +510,8 @@
       ],
       "doc": "docs/live-demo-onboarding.md",
       "scopeNote": "First prospect-demo acceptance. Both-provider restaurant/POS pilot gates remain later work.",
-      "status": "local_pickup_implemented_real_whatsapp_and_webpay_pending"
+      "status": "local_pickup_implemented_real_whatsapp_and_webpay_pending",
+      "completedImplementationBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/28"
     }
   ],
   "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations."

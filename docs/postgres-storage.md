@@ -1,5 +1,13 @@
 # PostgreSQL storage and restaurant access (#6)
 
+## Durable WhatsApp extension (#10)
+
+Migration 004 adds a scoped durable message queue. PostgreSQL Cloud mode commits a verified inbound job before acknowledging the webhook. Domain changes, the cached reply and reply-pending state commit together; network sends run after a committed claim. The server polls automatically, with branch locks and persisted claims coordinating multiple processes. Explicit provider rejections have bounded retries/backoff; a timeout, malformed acceptance response, or expired send claim becomes `needs_attention` and is not automatically resent. Later messages from that conversation wait; unrelated conversations can continue. A provider acceptance reference is stored when returned. This is not proof of device delivery or exactly-once network sending.
+
+Use authenticated `GET /api/whatsapp/delivery` for branch-scoped counts by queue state without customer identifiers. Failed/uncertain jobs need operator investigation; there is no blind retry control. Keep the affected conversation paused until the provider-side outcome is understood. Delivery-status callbacks, retention/deletion policy and the staff recovery UI remain follow-up acceptance work in #10/#12/#20. Memory mode retains synchronous test-only delivery.
+
+The timer stops before the application pool closes. After a crash, pending work/replies remain in PostgreSQL; expired send claims are parked for review because the external outcome cannot be inferred from a local receipt. Apply migrations before starting the updated runtime. Do not enable Cloud mode until real sender mapping, recipient permission, HTTPS callback and private runtime credentials are verified.
+
 ## Modes and boundaries
 
 `PERSISTENCE=memory` retains the quick local prototype. `PERSISTENCE=postgres` requires `DATABASE_URL`, an applied migration, a seeded branch and an individual staff token. It never falls back to memory or the shared admin key when the database is unavailable. `/health` checks connectivity and reports the storage mode. Both modes still use simulated checkout/POS adapters.
@@ -42,7 +50,7 @@ This deliberately loads/saves one branch's small dataset per operation and uses 
 
 `npm run db:migrate` takes a transaction-scoped migration lock, records each migration's checksum and applies pending SQL atomically. Re-running it is safe; modifying an already applied migration fails. Add a new numbered migration for changes. Startup checks for the schema and never silently runs DDL or seed. Migration rollback and application transaction rollback release the checked-out client.
 
-Database mode persists inbox replies and successful outbound-delivery receipts. Network calls occur outside the state transaction. A crash between an outbound send and its receipt commit can still resend a reply; distributed delivery claims, durable async acknowledgment/backoff and timeout reconciliation remain **#10**. The outbox has no live payment/POS worker in this change. **#8** still owns the full separated financial/fulfillment state model and richer event contracts. Persisted catalog-version/expiry quote checks are implemented in the #7 extension. **#13/#22** still own real provider side effects. The local fake adapters must not be mistaken for exactly-once financial processing.
+The original #6 baseline persisted inbox replies and successful outbound-delivery receipts. The #10 extension described above now adds durable async delivery in PostgreSQL Cloud mode. Network calls occur outside the state transaction. A crash between an outbound send and its receipt commit can still resend a reply; the new queue prevents blind automatic replay of ambiguous sends; provider delivery status and manual reconciliation remain acceptance work in **#10**. The outbox has no live payment/POS worker in this change. **#8** still owns the full separated financial/fulfillment state model and richer event contracts. Persisted catalog-version/expiry quote checks are implemented in the #7 extension. **#13/#22** still own real provider side effects. The local fake adapters must not be mistaken for exactly-once financial processing.
 
 ## Verification
 

@@ -8,7 +8,7 @@ export interface PosProvider {
   submitPaidPickup(order: Order): Promise<{ reference: string }>;
 }
 export interface WhatsAppTransport {
-  sendText(to: string, text: string): Promise<void>;
+  sendText(to: string, text: string): Promise<void | { id: string }>;
 }
 
 export class DemoPaymentProvider implements PaymentProvider {

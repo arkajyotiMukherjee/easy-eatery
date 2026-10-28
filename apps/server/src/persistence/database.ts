@@ -57,7 +57,7 @@ export class PostgresRepository {
 
   // A branch row lock serializes this small POC's unit of work across app processes.
   // Domain Maps are transaction-local working sets, never the durable source of truth.
-  async transaction<T>(identity: Identity, action: string, work: (state: MemoryStore) => Promise<T> | T): Promise<T> {
+  async transaction<T>(identity: Identity, action: string, work: (state: MemoryStore, client: PoolClient) => Promise<T> | T): Promise<T> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -69,7 +69,7 @@ export class PostgresRepository {
       await this.authorize(client, identity, action);
       const state = await this.load(client, identity, branch.rows[0]);
       const before = new Map([...state.orders].map(([id, order]) => [id, structuredClone(order)]));
-      const result = await work(state);
+      const result = await work(state, client);
       if (state.tenant.id !== identity.tenantId || state.tenant.branchId !== identity.branchId) throw new AccessError(403);
       if (!action.endsWith('.read')) {
         await this.save(client, state, before);

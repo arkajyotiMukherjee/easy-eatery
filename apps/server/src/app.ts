@@ -8,6 +8,7 @@ import { DemoPaymentProvider, DemoPosProvider, type WhatsAppTransport } from './
 import { parseMessages, validSignature } from './integrations/whatsapp.ts';
 import { errors, localeFrom, type Locale } from './platform/i18n.ts';
 import { AccessError, type Identity, type PostgresRepository } from './persistence/database.ts';
+import { WhatsAppQueue } from './persistence/whatsapp-queue.ts';
 import { CatalogService } from './platform/catalog.ts';
 
 export type Config = { payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
@@ -16,6 +17,7 @@ export function createApp(config: Config, store = new MemoryStore()) {
   if (!config.repository && (!config.adminToken || config.adminToken.length < 16)) throw new Error('ADMIN_TOKEN must contain at least 16 characters.');
   if (config.payAtPickup) store.tenant.payAtPickup = true;
   if (config.posProvider) store.tenant.posProvider = config.posProvider;
+  const queue = config.repository && config.transport && config.phoneId ? new WhatsAppQueue(config.repository, config.transport, config.phoneId) : undefined;
   const app = Fastify({ bodyLimit: 128 * 1024, logger: false, ajv: { customOptions: { removeAdditional: false } } });
   const ordering = new OrderingService(store, new DemoPaymentProvider(), new DemoPosProvider());
   const conversation = new Conversation(ordering);
@@ -72,7 +74,7 @@ export function createApp(config: Config, store = new MemoryStore()) {
   }
   app.get('/health', async () => {
     if (config.repository) await config.repository.pool.query('SELECT 1');
-    return { status: 'ok', persistence: config.repository ? 'postgres' : 'memory', pos: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'local' : 'simulated', payments: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'pay_at_pickup' : 'simulated' };
+    return { status: 'ok', persistence: config.repository ? 'postgres' : 'memory', pos: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'local' : 'simulated', payments: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'pay_at_pickup' : 'simulated', whatsappDelivery: queue ? 'durable' : 'synchronous-test-only' };
   });
   app.get('/api/dashboard', async request => run(identities.get(request), 'dashboard.read', ({ orders }) => ({ ...orders.dashboard(), persistence: config.repository ? 'postgres' : 'memory', role: identities.get(request)?.role ?? 'owner' })));
   app.get('/api/catalog', async request => run(identities.get(request), 'catalog.read', ({ state }) => new CatalogService(state).read()));
@@ -123,6 +125,10 @@ export function createApp(config: Config, store = new MemoryStore()) {
     const messages = parseMessages(request.body, config.phoneId);
     const identity = config.repository ? await config.repository.channelIdentity(config.phoneId) : undefined;
     if (config.repository && !identity) return reply.code(403).send({ error: 'Unmapped receiving account' });
+    if (queue && identity) {
+      await queue.enqueue(identity, messages);
+      return { received: true, queued: true };
+    }
     const run = webhookQueue.then(async () => {
       for (const message of messages) {
         await deliverMessage(identity ?? undefined, message);
@@ -146,5 +152,14 @@ export function createApp(config: Config, store = new MemoryStore()) {
     await config.transport!.sendText(message.from, result.response);
     await run(identity, 'whatsapp.delivered', ({ state }) => { state.delivered.add(result.key); });
   }
-  return { app, store, ordering, conversation };
+  app.get('/api/whatsapp/delivery', async request => {
+    if (!config.repository) return { mode: 'synchronous', counts: [] };
+    const identity = identities.get(request)!;
+    return config.repository.transaction(identity, 'whatsapp.delivery.read', async (_state, client) => {
+      const result = await client.query('SELECT state,count(*)::integer AS count FROM whatsapp_jobs WHERE tenant_id=$1 AND branch_id=$2 GROUP BY state', [identity.tenantId,identity.branchId]);
+      return { mode: 'durable', counts: result.rows };
+    });
+  });
+  app.addHook('onClose', async () => { await queue?.stop(); });
+  return { app, store, ordering, conversation, queue };
 }
