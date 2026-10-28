@@ -28,7 +28,7 @@ Both **Toteat and Fudo** are required for the initial pilot. Spanish is the defa
 | P20 | [#20: Prepare pilot privacy, support and operational controls](https://github.com/arkajyotiMukherjee/easy-eatery/issues/20) | M4 | P0 | M | 1–2 days | #1, #10, #17, #19 |
 | P21 | [#21: Run customer demo, sandbox acceptance and the Chile pilot go/no-go](https://github.com/arkajyotiMukherjee/easy-eatery/issues/21) | M4 | P0 | M | 1–2 days + pilot observation | #4, #11, #12, #17, #18, #19, #20, #23 |
 
-Foundation issue #5 is complete and closed by merged PR #24. Issue #6 is implemented on `codex/postgres-restaurant-access` and awaits review/merge. The remaining issues are planned work; creating an issue does not mark the integration complete. M0 and provider-access tasks should begin immediately, including Fudo's external-order approval request through the authorized restaurant owner.
+Foundation issue #5 is complete and closed by merged PR #24. Issue #6 is complete and closed by merged PR #25. Issue #7’s manual catalog/availability implementation is under review on `codex/catalog-availability`; provider fixtures and restaurant approval remain outstanding. The remaining issues are planned work; creating an issue does not mark the integration complete. M0 and provider-access tasks should begin immediately, including Fudo's external-order approval request through the authorized restaurant owner.
 
 Machine-readable planning data: `backlog.json`. Actual created GitHub issue IDs/URLs: `github-issues.json`. When changing scope, update both GitHub issue bodies and these local indexes. Do not blindly re-run a creation script and duplicate issues.
 

@@ -133,7 +133,8 @@
         "Verify restart recovery and transaction rollback. Replace shared demo key with real staff authentication before staging handles customer data."
       ],
       "doc": "docs/postgres-storage.md",
-      "status": "in_review"
+      "status": "completed",
+      "completedBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/25"
     },
     {
       "id": "P07",
@@ -152,7 +153,9 @@
         "Support manual seed/import as an explicit pilot fallback with restaurant approval; WhatsApp must not require QR-menu entitlement.",
         "Provide an operator correction flow and test mapping drift, stale catalog and invalid product IDs."
       ],
-      "doc": "docs/architecture.md"
+      "doc": "docs/catalog-and-availability.md",
+      "status": "implementation_in_review",
+      "externalAcceptance": "Requires authorized Toteat/Fudo fixtures and restaurant approval from #2/#4."
     },
     {
       "id": "P08",

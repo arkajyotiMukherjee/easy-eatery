@@ -83,3 +83,7 @@ Log correlation IDs, order IDs, provider outcome class, latency and retry count.
 ## PostgreSQL and access implementation (#6)
 
 Optional PostgreSQL mode now implements transactional restaurant/branch repositories, migrations/seed, scoped staff tokens/roles, durable sessions/orders/line snapshots/payment references, inbox/outbox and audit records. See [the storage and access design](postgres-storage.md) for setup, isolation guarantees, restart tests and limits. Asynchronous messaging workers, quote/version contracts and real-provider financial reconciliation remain separate issues.
+
+## Catalog and availability extension (#7)
+
+The shared catalog now supports manual reviewed imports, product/modifier mappings for both providers, stock/shift/hours gates and persisted versioned quotes. See [catalog behavior and remaining provider gates](catalog-and-availability.md). Customer confirmation cannot silently accept a changed or expired quote. Verified provider ingestion remains #2/#13/#22; #7 stays open for its external acceptance evidence.

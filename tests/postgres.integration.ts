@@ -4,6 +4,9 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createApp } from '../apps/server/src/app.ts';
 import { issueStaffToken, migrate, PostgresRepository, seedBranch } from '../apps/server/src/persistence/database.ts';
 
@@ -41,7 +44,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
   };
 
   await t.test('migration/seed is repeatable and tokens are hashed and restaurant scoped', async () => {
-    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '1');
+    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '2');
     await seedBranch(pool, a, 'Ignored new name', 'fudo', '111');
     assert.equal((await pool.query('SELECT count(*) FROM products')).rows[0].count, '9');
     const identity = await repository.authenticate(owner.token);
@@ -175,5 +178,69 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
     assert.equal((await deliver(unknown, payload('999'))).statusCode, 403);
     await unknown.app.close();
     await assert.rejects(seedBranch(pool, b, 'Other', 'fudo', '111'), /another branch/);
+  });
+  await t.test('versioned catalog APIs preserve quotes/mappings and enforce owner/operator/viewer scope', async () => {
+    const scope = { tenantId: 'catalog-restaurant', branchId: 'main' };
+    await seedBranch(pool, scope, 'Catalog Test', 'fudo');
+    const cOwner = await issueStaffToken(pool, scope, 'Catalog Owner', 'owner');
+    const cOperator = await issueStaffToken(pool, scope, 'Catalog Staff', 'operator');
+    const cViewer = await issueStaffToken(pool, scope, 'Catalog Viewer', 'viewer');
+    const read = async (token = cOwner.token) => (await app.inject({ url: '/api/catalog', headers: headers(token) })).json();
+    const write = (input: unknown, token = cOwner.token) => app.inject({ method: 'POST', url: '/api/catalog', headers: headers(token), payload: input as any });
+    const initial = await read(cViewer.token);
+    const input = { expectedVersion: initial.version, manualApproved: true, products: initial.products.map((p: any) => ({ ...p, mappings: { toteat: `t-${p.id}`, fudo: `f-${p.id}` } })), availability: initial.availability };
+    input.products[0].price = 5000;
+    input.products[0].modifiers = [{ id: 'cheese', name: 'Queso', nameEn: 'Cheese', price: 500, available: true, mappings: { toteat: 't-cheese', fudo: 'f-cheese' } }];
+    assert.equal((await write(input, cOperator.token)).statusCode, 403);
+    assert.equal((await write(input, cViewer.token)).statusCode, 403);
+    assert.equal((await write({ ...input, tenantId: 'restaurant-a' })).statusCode, 400);
+    const saved = await write(input); assert.equal(saved.statusCode, 200, saved.body);
+    const catalog = saved.json(); assert.equal(catalog.version, 2);
+    const message = (text: string, id: string) => app.inject({ method: 'POST', url: '/api/demo/messages', headers: headers(cOwner.token), payload: { text, messageId: id, customerId: 'catalog-customer', locale: 'en' } });
+    assert.match((await message('1+cheese x 2', 'cart')).json().reply, /11,000/);
+    const modified = { expectedVersion: catalog.version, manualApproved: true, products: catalog.products, availability: catalog.availability };
+    modified.products[0].price = 6000;
+    assert.equal((await write(modified)).statusCode, 200);
+    const review = await message('confirm', 'reconfirm-one');
+    assert.match(review.json().reply, /changed or expired[\s\S]*13,000/);
+    assert.equal((await pool.query('SELECT count(*) FROM orders WHERE tenant_id=$1', [scope.tenantId])).rows[0].count, '0');
+    await message('confirm', 'reconfirm-two');
+    const result = await app.inject({ url: '/api/dashboard', headers: headers(cOwner.token) });
+    const order = result.json().orders[0];
+    assert.equal(order.total, 13000);
+    assert.equal(order.catalogVersion, 3);
+    assert.equal(order.lines[0].providerProductId, 'f-1');
+    assert.equal(order.lines[0].modifiers[0].providerId, 'f-cheese');
+    const current = await read();
+    const next = { expectedVersion: current.version, manualApproved: true, products: current.products, availability: current.availability };
+    const attempts = await Promise.all([write(next), write(next)]);
+    assert.deepEqual(attempts.map(r => r.statusCode).sort(), [200, 409]);
+    const latest = await read();
+    assert.equal((await app.inject({ method: 'POST', url: '/api/catalog/products/1/availability', headers: headers(cOperator.token), payload: { available: false, expectedVersion: latest.version } })).statusCode, 200);
+    const afterStock = await read();
+    assert.equal(afterStock.updatedAt, latest.updatedAt);
+    assert.equal((await read(owner.token)).products[0].available, true);
+    assert.equal((await app.inject({ method: 'POST', url: '/api/catalog/service', headers: headers(cViewer.token), payload: { acceptingOrders: false, shiftOpen: false, expectedVersion: afterStock.version } })).statusCode, 403);
+    const beforeRestart = await pool.query('SELECT quote FROM conversations WHERE tenant_id=$1', [scope.tenantId]);
+    assert.equal(beforeRestart.rows[0].quote.total, 13000);
+    const freshPool = new Pool({ connectionString: url, options: `-c search_path=${schema}` });
+    const fresh = createApp({ repository: new PostgresRepository(freshPool) });
+    try {
+      const persisted = (await fresh.app.inject({ url: '/api/dashboard', headers: headers(cOwner.token) })).json().orders[0];
+      assert.deepEqual(persisted.lines, order.lines);
+      assert.equal(persisted.total, 13000);
+      assert.equal((await fresh.app.inject({ url: '/api/catalog', headers: headers(cOwner.token) })).json().products[0].available, false);
+    } finally { await fresh.app.close(); await freshPool.end(); }
+    const directory = await mkdtemp(join(tmpdir(), 'easy-eatery-catalog-'));
+    try {
+      const finalCatalog = await read();
+      const filename = join(directory, 'catalog.json');
+      await writeFile(filename, JSON.stringify({ expectedVersion: finalCatalog.version, manualApproved: true, products: finalCatalog.products, availability: finalCatalog.availability }));
+      const scopedUrl = new URL(url!); scopedUrl.searchParams.set('options', `-c search_path=${schema}`);
+      const cli = await promisify(execFile)(process.execPath, ['--import', 'tsx', 'scripts/import-catalog.ts', filename], {
+        env: { ...process.env, DATABASE_URL: scopedUrl.toString(), CATALOG_STAFF_TOKEN: cOwner.token }, timeout: 15000,
+      });
+      assert.match(cli.stdout, new RegExp(`Catalog version ${finalCatalog.version + 1} saved`));
+    } finally { await rm(directory, { recursive: true }); }
   });
 });

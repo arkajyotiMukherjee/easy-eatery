@@ -1,5 +1,6 @@
 import { DomainError, MemoryStore, type OrderStatus } from './domain.ts';
 import type { PaymentProvider, PosProvider } from '../integrations/contracts.ts';
+import { isDeepStrictEqual } from 'node:util';
 
 export class OrderingService {
   constructor(readonly store: MemoryStore, readonly payment: PaymentProvider, readonly pos: PosProvider) {}
@@ -7,6 +8,18 @@ export class OrderingService {
   async confirm(customerId: string) {
     const session = this.store.session(customerId);
     if (session.orderId) return this.store.order(session.orderId);
+    this.store.assertOrderingAvailable();
+    this.store.quote(session.cart); // Availability and modifier/mapping checks before checkout.
+    if (!session.quote || session.quote.catalogVersion !== this.store.catalog.version || session.quote.expiresAt <= this.store.now() || session.quote.cartKey !== this.store.cartKey(session.cart)) {
+      this.store.review(customerId);
+      throw new DomainError('quote_changed');
+    }
+    // Also catches direct catalog edits that did not go through the versioned service.
+    const currentLines = this.store.quote(session.cart);
+    if (!isDeepStrictEqual(currentLines, session.quote.lines)) {
+      this.store.review(customerId);
+      throw new DomainError('quote_changed');
+    }
     const order = this.store.createOrder(customerId, session.cart);
     session.orderId = order.id;
     try {
@@ -22,6 +35,7 @@ export class OrderingService {
 
   async simulatePayment(id: string) {
     const order = this.store.order(id);
+    if (!order.posReference) this.store.assertOrderingAvailable();
     if (order.status === 'awaiting_payment') order.status = 'paid';
     if (!order.posReference) {
       const result = await this.pos.submitPaidPickup(structuredClone(order));

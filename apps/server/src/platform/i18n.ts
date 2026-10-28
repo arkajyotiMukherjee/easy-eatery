@@ -11,6 +11,13 @@ export const errors = {
     forbidden: 'Tu usuario no tiene permiso para realizar esta acción.',
     invalid_request: 'Revisa los datos e intenta nuevamente.',
     internal: 'No se pudo completar la operación. Intenta nuevamente.',
+    bad_catalog: 'Revisa los identificadores, nombres, precios enteros en CLP y horarios del catálogo.',
+    catalog_conflict: 'Otra persona actualizó el catálogo. Recarga antes de guardar.',
+    mapping_missing: 'Falta la correspondencia del producto o extra con el POS. Solicita ayuda al personal.',
+    unsupported_modifier: 'Producto o extra no válido. Revisa el menú y selecciona una opción disponible.',
+    restaurant_closed: 'El restaurante no está recibiendo pedidos de retiro en este momento.',
+    catalog_stale: 'El menú requiere revisión del personal antes de aceptar pagos.',
+    quote_changed: 'El menú o la cotización cambió o venció. Revisa el nuevo total y escribe confirmar otra vez.',
   },
   en: {
     empty_cart: 'Your cart is empty. Type menu.',
@@ -23,6 +30,13 @@ export const errors = {
     forbidden: 'Your account does not have permission to perform this action.',
     invalid_request: 'Check the submitted details and try again.',
     internal: 'Unable to complete the operation. Please try again.',
+    bad_catalog: 'Check catalog IDs, names, integer CLP prices and service hours.',
+    catalog_conflict: 'Someone else updated the catalog. Reload it before saving.',
+    mapping_missing: 'A product or extra is missing its POS mapping. Please ask the staff for help.',
+    unsupported_modifier: 'Invalid product or extra. Check the menu and select an available option.',
+    restaurant_closed: 'The restaurant is not accepting pickup orders right now.',
+    catalog_stale: 'Staff must review the menu before payments can be accepted.',
+    quote_changed: 'The menu or quote changed or expired. Review the new total and type confirm again.',
   },
 } as const;
 export type ErrorCode = keyof typeof errors.es;
