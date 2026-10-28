@@ -55,7 +55,12 @@ function renderDashboard() {
   $('persistence-note').textContent = !data ? t('storageUnknown') : t(data.persistence === 'postgres' ? 'postgresStorage' : 'demoReset');
   document.querySelectorAll('[data-message], #chat-form button').forEach(button => { button.disabled = data?.role === 'viewer'; });
   $('message').readOnly = data?.role === 'viewer';
-  $('provider').textContent = data ? `${t('provider')}: ${data.tenant.posProvider === 'fudo' ? 'Fudo' : 'Toteat'}` : '';
+  const local = data?.mode === 'local_pickup';
+  for (const key of ['demoPayments', 'operationsHint', 'simulated', 'mappingHint']) {
+    const node = document.querySelector(`[data-i18n="${key}"]`);
+    if (node) node.textContent = local ? t(key === 'operationsHint' ? 'localHint' : key === 'mappingHint' ? 'localMappingHint' : 'localKitchen') : t(key);
+  }
+  $('provider').textContent = local ? t('localKitchen') : data ? `${t('provider')}: ${data.tenant.posProvider === 'fudo' ? 'Fudo' : 'Toteat'}` : '';
   if (!data?.orders.length) {
     const empty = element('div', '', 'empty');
     empty.append(element('span', '↗', 'empty-icon'), element('h3', t('emptyTitle')), element('p', t('emptyHint')));
@@ -65,10 +70,13 @@ function renderDashboard() {
   for (const order of data.orders) {
     const card = element('article', '', 'order-card');
     const heading = element('div', '', 'order-top');
-    heading.append(element('h3', `#${order.id.slice(0, 8)}`), element('span', t('states')[order.status], 'badge'));
+    heading.append(element('h3', `#${order.id.slice(0, 8)}`), element('span', order.fulfillment === 'local' && order.status === 'awaiting_payment' ? t('awaitingStaff') : t('states')[order.status], 'badge'));
     card.append(heading, element('p', order.lines.map(line => `${line.quantity} × ${locale === 'en' ? line.nameEn : line.name}`).join(' · ')), element('strong', formatMoney(order.total)));
-    card.append(element('p', `${new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))} · WhatsApp · ${order.posReference ? t('kitchenReceived') : t('kitchenPending')}`));
-    const action = order.status === 'awaiting_payment' || order.status === 'paid' ? ['pay', 'pay', {}] :
+    card.append(element('p', `${new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' }).format(new Date(order.createdAt))} · WhatsApp · ${order.fulfillment === 'local' && order.status !== 'awaiting_payment' ? t('localKitchen') : order.posReference ? t('kitchenReceived') : t('kitchenPending')}`));
+    const pickup = order.fulfillment === 'local';
+    if (pickup) card.append(element('p', t(order.paymentState === 'store_paid' ? 'storePaid' : 'paymentDue')));
+    const action = pickup && order.status === 'awaiting_payment' ? ['acceptPickup', 'accept', {}] :
+      pickup && order.status === 'ready' && order.paymentState !== 'store_paid' ? ['recordStorePayment', 'record-store-payment', {}] : order.status === 'awaiting_payment' || order.status === 'paid' ? ['pay', 'pay', {}] :
       order.status === 'preparing' ? ['ready', 'status', { status: 'ready' }] :
       order.status === 'ready' ? ['collect', 'status', { status: 'collected' }] : null;
     if (action && data.role !== 'viewer') {
@@ -76,7 +84,7 @@ function renderDashboard() {
       button.type = 'button';
       button.addEventListener('click', () => guard(async () => {
         button.disabled = true;
-        try { await api(`/api/demo/orders/${order.id}/${action[1]}`, action[2]); await refresh(); }
+        try { await api(`/api/${['accept','record-store-payment'].includes(action[1]) ? 'pickup' : 'demo'}/orders/${order.id}/${action[1]}`, action[2]); await refresh(); }
         finally { button.disabled = false; }
       }));
       card.append(button);

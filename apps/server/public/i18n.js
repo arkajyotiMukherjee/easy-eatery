@@ -1,5 +1,6 @@
 export const copy = {
   es: {
+    awaitingStaff: 'Esperando aceptación del personal', localKitchen: 'Cocina de Easy Eatery · pago en el local', acceptPickup: 'Aceptar y preparar', recordStorePayment: 'Registrar pago recibido en el local', paymentDue: 'Pago pendiente en el local', storePaid: 'Pago en el local registrado', localHint: 'Acepta el pedido, prepara y marca listo. Registra el pago recibido antes de confirmar el retiro.', localMappingHint: 'En modo cocina local no se requieren códigos de Toteat ni Fudo.',
     language: 'Idioma / Language', title: 'Easy Eatery · Demo de retiro', headline: 'Del chat a la cocina.', subtitle: 'Un pedido, un pago, un retiro. Todo en el mismo lugar.',
     demoTitle: 'Entorno de demostración', demoPayments: 'Pagos y cocina simulados.', demoReset: 'Los datos se borran al reiniciar.',
     panelKey: 'Clave del panel', keyPlaceholder: 'Usa la clave de tu terminal', openDemo: 'Abrir demo', disconnected: 'Sin conexión', connected: 'Demo conectada',
@@ -29,6 +30,7 @@ export const copy = {
     commands: { menu: 'menú', cart: 'carrito', confirm: 'confirmar', new: 'nuevo' },
   },
   en: {
+    awaitingStaff: 'Awaiting staff acceptance', localKitchen: 'Easy Eatery kitchen · pay at pickup', acceptPickup: 'Accept and prepare', recordStorePayment: 'Record payment received at store', paymentDue: 'Payment due at pickup', storePaid: 'Store payment recorded', localHint: 'Accept the order, prepare it and mark ready. Record payment received before confirming pickup.', localMappingHint: 'Local kitchen mode requires no Toteat or Fudo codes.',
     language: 'Language / Idioma', title: 'Easy Eatery · Pickup demo', headline: 'From chat to kitchen.', subtitle: 'One order, one payment, one pickup. All in one place.',
     demoTitle: 'Demo environment', demoPayments: 'Payments and kitchen are simulated.', demoReset: 'Data resets when the server restarts.',
     panelKey: 'Panel key', keyPlaceholder: 'Use the key from your terminal', openDemo: 'Open demo', disconnected: 'Disconnected', connected: 'Demo connected',

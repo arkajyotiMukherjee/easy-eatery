@@ -2,7 +2,9 @@
 
 Modular restaurant SaaS, starting with **WhatsApp pickup ordering for one restaurant in Chile**. Shared catalog and ordering capabilities do not require a QR-menu subscription.
 
-This setup includes a runnable **Spanish-default and English demo**, an optional **PostgreSQL mode with individual staff access**, a test-account WhatsApp Cloud API transport, and **23 GitHub issues across five milestones**. Both **Toteat and Fudo** are required for the initial pilot. Payment and POS adapters remain **simulated**. Default memory mode resets on restart; PostgreSQL mode preserves restaurant data. The real-provider pilot is tracked in the backlog.
+This setup includes a runnable **Spanish-default and English demo**, an optional **PostgreSQL mode with individual staff access**, a test-account WhatsApp Cloud API transport, and **24 GitHub issues across five milestones**. Both **Toteat and Fudo** are required for the initial pilot. Payment and POS adapters remain **simulated**. Default memory mode resets on restart; PostgreSQL mode preserves restaurant data. The real-provider pilot is tracked in the backlog.
+
+The first prospect-demo scope now allows **our own kitchen dashboard and pay at pickup**, with **Webpay sandbox checkout** planned independently of a restaurant POS. Local kitchen and pay-at-pickup mode are implemented; Webpay sandbox remains pending. See [live-demo setup and account handoff](docs/live-demo-onboarding.md) and [tracking issue #27](https://github.com/arkajyotiMukherjee/easy-eatery/issues/27).
 
 ## Run the demo
 
@@ -28,6 +30,18 @@ Choose **English** in the header to test the UI and chat in English. Spanish is 
 The simulation payment reference points to the panel; it is not a hosted checkout and cannot charge a card. The panel button is the only simulation payment control. Refresh the operations panel to see orders received through the real WhatsApp test transport.
 
 Set `POS_PROVIDER=toteat` (default) or `fudo` in `.env` to choose the simulated provider label. Both real adapters require provider access and implementation in #13/#22/#23. If port 3000 is occupied, set `PORT=3311` and open that port instead.
+
+## Pay at pickup without a POS
+
+For memory-only testing set `PAY_AT_PICKUP=true`. For PostgreSQL, apply migrations and configure the specific branch through the developer CLI:
+
+```sh
+node --import tsx --env-file-if-exists=.env scripts/database.ts pickup-mode <tenant> <branch> true
+```
+
+Restart the updated server, open the panel with a token scoped to that branch, then confirm a cart. Staff uses **Accept and prepare → Mark ready → Record payment received at store → Confirm pickup**. Recording payment is an assertion by authorized staff that money was received; it does not charge a card. Orders remain unpaid through preparation/readiness. The simulated-pay endpoint rejects these orders. Confirmation/replay does not create another ticket or a fake POS reference; local mode needs no vendor catalog mappings. Existing confirmed orders keep their original payment/fulfillment method when branch settings change. Store-paid and due amounts are separate dashboard metrics; old simulation figures are demonstration data.
+
+This is a supervised local demo. Real-phone recipient/webhook verification, durable async message delivery, ready notifications and online checkout remain separate work. Business verification is not being attempted with invented company information.
 
 ## PostgreSQL and individual staff access
 

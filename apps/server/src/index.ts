@@ -24,11 +24,11 @@ if (pool) {
   // Fail on missing schema; startup never silently creates or overwrites data.
   await pool.query('SELECT name FROM schema_migrations LIMIT 1');
 }
-const { app } = createApp({ adminToken: repository ? undefined : adminToken, repository, transport, appSecret: env.WHATSAPP_APP_SECRET, verifyToken: env.WHATSAPP_VERIFY_TOKEN, phoneId: env.WHATSAPP_PHONE_NUMBER_ID, posProvider: repository ? undefined : posProvider as 'toteat' | 'fudo' });
+const { app } = createApp({ payAtPickup: !repository && env.PAY_AT_PICKUP === 'true', adminToken: repository ? undefined : adminToken, repository, transport, appSecret: env.WHATSAPP_APP_SECRET, verifyToken: env.WHATSAPP_VERIFY_TOKEN, phoneId: env.WHATSAPP_PHONE_NUMBER_ID, posProvider: repository ? undefined : posProvider as 'toteat' | 'fudo' });
 if (pool) app.addHook('onClose', async () => { await pool.end(); });
 await app.listen({ host, port: Number(env.PORT ?? 3000) });
 console.log(`Easy Eatery demo: http://${host}:${env.PORT ?? 3000}`);
 if (!repository && !env.ADMIN_TOKEN) console.log(`Temporary local panel key: ${adminToken}`);
 console.log(repository ? 'PostgreSQL storage enabled. Use an individual scoped staff token; ADMIN_TOKEN is ignored.' : 'Memory storage: data resets on restart.');
-console.log('Payment and POS are simulated. Use test data only.');
+console.log('Use test data only. Payment and fulfillment follow branch settings: simulation or local pay at pickup; no online payment/POS integration.');
 for (const signal of ['SIGTERM', 'SIGINT'] as const) process.on(signal, async () => { await app.close(); process.exit(0); });

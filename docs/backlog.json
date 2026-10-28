@@ -13,7 +13,7 @@
     },
     {
       "title": "M2 — Real WhatsApp ordering",
-      "description": "Cloud API test account, verified signed webhooks, durable inbox/outbox, Spanish-default and English ordering with safe session recovery. Exit: permitted recipients complete ordering with redacted delivery evidence.",
+      "description": "Real Meta test-number ordering with durable bilingual messaging, local kitchen fulfillment and pay at pickup. Add independently verified Webpay sandbox without POS prerequisites. Exit: prospect-demo evidence in P24; restaurant POS acceptance remains later work.",
       "number": 3
     },
     {
@@ -184,7 +184,6 @@
       "complexity": "S",
       "estimate": "0.5–1 day + account wait",
       "deps": [
-        "P02",
         "P05"
       ],
       "criteria": [
@@ -193,7 +192,8 @@
         "Demonstrate one signed inbound greeting and outbound Spanish menu to a permitted test recipient; redact phone numbers and tokens from evidence.",
         "Record token lifetime/rotation and the supported messaging window/template requirements; the WhatsApp Business app alone is not the webhook API."
       ],
-      "doc": "docs/integrations.md"
+      "doc": "docs/integrations.md",
+      "scopeNote": "POS access is not required for the real-phone prospect demo; retain the existing Business mobile number."
     },
     {
       "id": "P10",
@@ -277,22 +277,22 @@
     },
     {
       "id": "P14",
-      "milestone": 4,
+      "milestone": 3,
       "title": "Implement the approved hosted checkout adapter",
       "priority": "P0",
       "complexity": "M",
       "estimate": "2 days",
       "deps": [
-        "P03",
         "P08"
       ],
       "criteria": [
         "Create a server-priced checkout with tenant, order, amount, currency, expiry and unique merchant reference.",
-        "Send the real provider-hosted HTTPS URL in WhatsApp; never collect card data in our app.",
-        "Support provider signature/status verification requirements and merchant credentials per restaurant.",
+        "Send an opaque HTTPS application checkout link in WhatsApp whose landing page POSTs token_ws to the allowlisted provider-hosted sandbox URL; never collect card data in our app.",
+        "Persist sandbox attempt/environment/order/session references and implement server-side commit/status verification. Production merchant credentials and settlement require P03 before activation.",
         "Test expiry, abandoned checkout, duplicate requests and gateway errors. Clearly distinguish sandbox from production and record who receives settlement."
       ],
-      "doc": "docs/integrations.md"
+      "doc": "docs/integrations.md",
+      "scopeNote": "Webpay integration-environment checkout is approved independently of POS; P03 gates production merchant settlement. Current network probe returned security-page HTTP 403 before API response; no checkout/payment proven."
     },
     {
       "id": "P15",
@@ -481,6 +481,35 @@
         "Document provider-specific limitations and verify switching providers cannot reroute already-confirmed orders; no silent fallback to another restaurant or provider."
       ],
       "doc": "docs/integrations.md"
+    },
+    {
+      "id": "P24",
+      "milestone": 3,
+      "title": "Deliver the POS-independent WhatsApp demo and pay-at-pickup fallback",
+      "priority": "P0",
+      "complexity": "M",
+      "estimate": "Re-estimate after state and API access checks",
+      "deps": [
+        "P08",
+        "P09",
+        "P10",
+        "P14"
+      ],
+      "criteria": [
+        "Configure explicit local kitchen fulfillment with no simulated vendor references or required POS mappings.",
+        "Separate payment method/state from fulfillment; allow unpaid pay-at-pickup orders to be accepted/prepared/ready.",
+        "Persist immutable totals, one ticket, audited scoped staff actions and recovery across retries/restarts.",
+        "Prove real WhatsApp menu/cart/confirmation in Spanish and English using durable inbox/outbox delivery.",
+        "Rehearse pay at pickup through accepted/preparing/ready, store payment and collection.",
+        "Add Webpay sandbox creation, hosted test-card payment and authoritative commit/status verification; test decline/cancel/expiry/replay/unknown outcomes.",
+        "Show local fulfillment, separate unpaid/test-authorized/store-paid amounts and reconciled pickup counts.",
+        "Require explicit safe payment-method changes and prevent late authorization/double collection.",
+        "Use supervised public HTTPS with synthetic data first; obtain hosting budget/access before unattended staging."
+      ],
+      "doc": "docs/live-demo-onboarding.md",
+      "scopeNote": "First prospect-demo acceptance. Both-provider restaurant/POS pilot gates remain later work.",
+      "status": "local_pickup_implemented_real_whatsapp_and_webpay_pending"
     }
-  ]
+  ],
+  "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations."
 }

@@ -22,6 +22,7 @@ export class OrderingService {
     }
     const order = this.store.createOrder(customerId, session.cart);
     session.orderId = order.id;
+    if (order.paymentMethod === 'pay_at_pickup') return order;
     try {
       const checkout = await this.payment.createCheckout(order);
       order.paymentReference = checkout.reference;
@@ -35,7 +36,9 @@ export class OrderingService {
 
   async simulatePayment(id: string) {
     const order = this.store.order(id);
+    if (order.paymentMethod === 'pay_at_pickup') throw new DomainError('transition');
     if (!order.posReference) this.store.assertOrderingAvailable();
+    order.paymentState = 'simulated_paid';
     if (order.status === 'awaiting_payment') order.status = 'paid';
     if (!order.posReference) {
       const result = await this.pos.submitPaidPickup(structuredClone(order));
@@ -45,11 +48,28 @@ export class OrderingService {
     return order;
   }
 
+  acceptPickup(id: string) {
+    const order = this.store.order(id);
+    if (order.fulfillment !== 'local') throw new DomainError('transition');
+    if (order.status !== 'awaiting_payment') return order;
+    this.store.assertOrderingAvailable();
+    order.status = 'preparing';
+    return order;
+  }
+
+  recordStorePayment(id: string) {
+    const order = this.store.order(id);
+    if (order.paymentMethod !== 'pay_at_pickup' || !['ready', 'collected'].includes(order.status)) throw new DomainError('transition');
+    order.paymentState = 'store_paid';
+    return order;
+  }
+
   transition(id: string, next: OrderStatus) {
     const order = this.store.order(id);
     if (order.status === next) return order;
     const allowed: Partial<Record<OrderStatus, OrderStatus>> = { preparing: 'ready', ready: 'collected' };
     if (allowed[order.status] !== next) throw new DomainError('transition');
+    if (next === 'collected' && order.paymentMethod === 'pay_at_pickup' && order.paymentState !== 'store_paid') throw new DomainError('transition');
     order.status = next;
     return order;
   }
@@ -58,12 +78,14 @@ export class OrderingService {
     const orders = [...this.store.orders.values()].filter(o => o.tenantId === this.store.tenant.id && o.branchId === this.store.tenant.branchId);
     return {
       tenant: this.store.tenant,
-      mode: 'simulation',
+      mode: this.store.tenant.payAtPickup ? 'local_pickup' : 'simulation',
       metrics: {
         orders: orders.length,
-        paidOrders: orders.filter(o => o.status !== 'awaiting_payment').length,
+        storePaidRevenue: orders.filter(o => o.paymentState === 'store_paid').reduce((sum, o) => sum + o.total, 0),
+        dueRevenue: orders.filter(o => o.paymentState === 'due').reduce((sum, o) => sum + o.total, 0),
+        paidOrders: orders.filter(o => (o.paymentState === 'store_paid' || (!this.store.tenant.payAtPickup && o.paymentState === 'simulated_paid'))).length,
         collected: orders.filter(o => o.status === 'collected').length,
-        paidRevenue: orders.filter(o => o.status !== 'awaiting_payment').reduce((sum, o) => sum + o.total, 0),
+        paidRevenue: orders.filter(o => (o.paymentState === 'store_paid' || (!this.store.tenant.payAtPickup && o.paymentState === 'simulated_paid'))).reduce((sum, o) => sum + o.total, 0),
       },
       orders: orders.map(({ customerId: _customerId, ...order }) => order).reverse(),
     };

@@ -35,7 +35,7 @@ test('pickup loop: no QR dependency, exact CLP total, payment before kitchen, co
     assert.equal((await app.inject({ method: 'POST', url: `/api/demo/orders/${order.id}/status`, headers, payload: { status } })).statusCode, 200);
   }
   const dashboard = (await app.inject({ url: '/api/dashboard', headers })).json();
-  assert.deepEqual(dashboard.metrics, { orders: 1, paidOrders: 1, collected: 1, paidRevenue: 11500 });
+  assert.deepEqual(dashboard.metrics, { orders: 1, paidOrders: 1, collected: 1, paidRevenue: 11500, storePaidRevenue: 0, dueRevenue: 0 });
   assert.equal(dashboard.orders[0].customerId, undefined);
 });
 

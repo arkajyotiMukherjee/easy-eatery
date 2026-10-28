@@ -44,7 +44,7 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
   };
 
   await t.test('migration/seed is repeatable and tokens are hashed and restaurant scoped', async () => {
-    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '2');
+    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '3');
     await seedBranch(pool, a, 'Ignored new name', 'fudo', '111');
     assert.equal((await pool.query('SELECT count(*) FROM products')).rows[0].count, '9');
     const identity = await repository.authenticate(owner.token);
@@ -243,4 +243,33 @@ test('PostgreSQL persistence and restaurant-scoped access', async t => {
       assert.match(cli.stdout, new RegExp(`Catalog version ${finalCatalog.version + 1} saved`));
     } finally { await rm(directory, { recursive: true }); }
   });
+  await t.test('local pickup persists unpaid kitchen state and audited store payment independently', async () => {
+    const scope = { tenantId: 'pickup-only', branchId: 'main' };
+    await seedBranch(pool, scope, 'Local Kitchen', 'toteat');
+    await pool.query('UPDATE branches SET pay_at_pickup=true WHERE tenant_id=$1', [scope.tenantId]);
+    const staff = await issueStaffToken(pool, scope, 'Pickup operator', 'operator');
+    const readOnly = await issueStaffToken(pool, scope, 'Pickup viewer', 'viewer');
+    const h = headers(staff.token);
+    for (const text of ['1','confirm']) assert.equal((await app.inject({method:'POST',url:'/api/demo/messages',headers:h,payload:{customerId:'pickup-person',messageId:text,text,locale:'en'}})).statusCode,200);
+    const ticket = (await app.inject({url:'/api/dashboard',headers:h})).json().orders[0];
+    const action = (suffix: string, token = staff.token) => app.inject({method:'POST',url:`/api/pickup/orders/${ticket.id}/${suffix}`,headers:headers(token)});
+    assert.equal((await action('accept',readOnly.token)).statusCode,403);
+    const outsider = await issueStaffToken(pool, b, 'Fresh outsider', 'owner');
+    assert.equal((await action('accept',outsider.token)).statusCode,409);
+    assert.equal((await action('accept')).statusCode,200);
+    const fresh = createApp({repository:new PostgresRepository(pool)});
+    try {
+      const dashboard = (await fresh.app.inject({url:'/api/dashboard',headers:h})).json();
+      assert.equal(dashboard.orders[0].status,'preparing');
+      assert.equal(dashboard.orders[0].paymentState,'due');
+      assert.equal(dashboard.metrics.paidRevenue,0);
+      assert.equal(dashboard.orders[0].posReference,undefined);
+    } finally { await fresh.app.close(); }
+    assert.equal((await app.inject({method:'POST',url:`/api/demo/orders/${ticket.id}/status`,headers:h,payload:{status:'ready'}})).statusCode,200);
+    await Promise.all([action('record-store-payment'),action('record-store-payment')]);
+    assert.equal((await pool.query('SELECT count(*) FROM payment_attempts WHERE tenant_id=$1',[scope.tenantId])).rows[0].count,'0');
+    assert.equal((await pool.query("SELECT count(*) FROM outbox WHERE tenant_id=$1 AND payload->>'paymentState'='store_paid'",[scope.tenantId])).rows[0].count,'1');
+    assert.equal((await pool.query("SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND action='pickup.record-store-payment'",[scope.tenantId])).rows[0].count,'2');
+  });
+
 });

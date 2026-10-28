@@ -15,6 +15,12 @@ try {
     if (provider !== 'toteat' && provider !== 'fudo') throw new Error('SEED_POS_PROVIDER must be toteat or fudo');
     await seedBranch(pool, { tenantId, branchId }, process.env.SEED_RESTAURANT_NAME ?? 'Mesa Sur', provider, process.env.SEED_WHATSAPP_PHONE_ID);
     console.log('Branch and sample catalog seeded. Existing rows were preserved.');
+  } else if (command === 'pickup-mode') {
+    const [tenantId, branchId, enabled] = process.argv.slice(3);
+    if (!tenantId || !branchId || !['true', 'false'].includes(enabled)) throw new Error('Usage: scripts/database.ts pickup-mode <tenant> <branch> <true|false>');
+    const result = await pool.query('UPDATE branches SET pay_at_pickup=$3 WHERE tenant_id=$1 AND id=$2', [tenantId, branchId, enabled === 'true']);
+    if (result.rowCount !== 1) throw new Error('Branch not found');
+    console.log('Branch pickup mode updated; existing confirmed orders retain their payment and fulfillment method.');
   } else if (command === 'staff') {
     const [tenantId, branchId, role, ...name] = process.argv.slice(3);
     if (!tenantId || !branchId || !['owner', 'operator', 'viewer'].includes(role) || !name.length) throw new Error('Usage: npm run db:staff -- <tenant> <branch> <owner|operator|viewer> <display name>');
