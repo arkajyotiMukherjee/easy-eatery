@@ -532,6 +532,12 @@
       "chromium": "ES/EN owner/operator/viewer desktop/mobile; fake sandbox POST/reversal",
       "packaging": "nonroot image HTTP lifecycle passed",
       "restore": "disposable PostgreSQL only"
-    }
+    },
+    "branch": "codex/pilot-readiness",
+    "implementation_commits": [
+      "985e7de",
+      "65167d5"
+    ],
+    "pull_request_status": "creation_blocked_graphql_proxy_forbidden"
   }
 }

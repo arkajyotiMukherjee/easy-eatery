@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 590 nodes · 1653 edges · 25 communities (22 shown, 3 thin omitted)
+- 591 nodes · 1654 edges · 25 communities (22 shown, 3 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 61 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `985e7deb`
+- Built from commit: `65167d5a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -115,7 +115,7 @@ Nodes (16): POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, interval, retries, te
 
 ### Community 10 - "Community 10"
 Cohesion: 0.12
-Nodes (15): Authorization: cloud orchestrator may spawn bounded specialist subagents and finish independent pilot work, docs/cloud-agent-handoff.md: Easy Eatery: cloud orchestrator handoff, docs/cloud-agent-handoff.md: Toteat and Fudo, docs/cloud-agent-handoff.md: Hosted checkout, docs/cloud-agent-handoff.md: Restaurant, hosting and operations, docs/cloud-agent-handoff.md: Cloud bootstrap and validation, docs/cloud-agent-handoff.md: Clone the repository and start from current main in your authorized checkout., docs/cloud-agent-handoff.md: Use a disposable PostgreSQL 17 instance supplied by the cloud task/CI. (+7 more)
+Nodes (16): Authorization: cloud orchestrator may spawn bounded specialist subagents and finish independent pilot work, docs/cloud-agent-handoff.md: Easy Eatery: cloud orchestrator handoff, docs/cloud-agent-handoff.md: Toteat and Fudo, docs/cloud-agent-handoff.md: Hosted checkout, docs/cloud-agent-handoff.md: Restaurant, hosting and operations, docs/cloud-agent-handoff.md: Cloud bootstrap and validation, docs/cloud-agent-handoff.md: Clone the repository and start from current main in your authorized checkout., docs/cloud-agent-handoff.md: Use a disposable PostgreSQL 17 instance supplied by the cloud task/CI. (+8 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.12
@@ -158,8 +158,8 @@ Cohesion: 0.40
 Nodes (4): docs/webpay-sandbox.md: Staff-assisted Webpay sandbox checkout, docs/webpay-sandbox.md: Rehearse the flow, docs/webpay-sandbox.md: Full test reversals and exceptions, docs/webpay-sandbox.md: Evidence and gates
 
 ## Knowledge Gaps
-- **102 isolated node(s):** `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo`, `README.md: Durable WhatsApp message processing`, `README.md: Read next` (+97 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 166 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **103 isolated node(s):** `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo`, `README.md: Durable WhatsApp message processing`, `README.md: Read next` (+98 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 167 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -170,11 +170,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 5 inferred relationships involving `createApp()` (e.g. with `.acceptPickup()` and `.dashboard()`) actually correct?**
   _`createApp()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo` to the rest of the system?**
-  _102 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _103 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community -1` be split into smaller, more focused modules?**
   _Cohesion score 0.14793741109530584 - nodes in this community are weakly interconnected._
 - **Why does `docs/cloud-agent-handoff.md: Verified implementation baseline` connect `Community 6` to `Community 0`, `Community 1`, `Community 10`, `Community 3`?**
-  _High betweenness centrality (0.106) - this node is a cross-community bridge._
+  _High betweenness centrality (0.107) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.1130952380952381 - nodes in this community are weakly interconnected._
 - **Why does `tests/AGENTS.md: Verification map` connect `Community 8` to `Community 0`, `Community 1`, `Community 2`?**

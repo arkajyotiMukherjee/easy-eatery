@@ -1,6 +1,6 @@
 # Pending GitHub delivery evidence
 
-28 October 2026. These are pending issue comments, not published GitHub updates. Public issue pages are readable, but REST and GraphQL requests are denied by the runtime proxy; the final issue #10 API read still returned Forbidden. Apply after API access is restored and link the delivery commits/PR. Preserve unchecked external acceptance criteria; no issue is claimed closed.
+28 October 2026. These are pending issue comments, not published GitHub updates. Public issue pages are readable, but REST and GraphQL requests are denied by the runtime proxy; the final issue #10 API read still returned Forbidden. Implementation commits `985e7de` and `65167d5` are pushed on `codex/pilot-readiness`. Draft PR creation also returned proxy Forbidden. Apply these issue updates after API access is restored and link those commits and the eventual PR. Preserve unchecked external acceptance criteria; no issue is claimed closed.
 
 ## Issues #10 and #12: delivery, staff handoff and notifications
 
