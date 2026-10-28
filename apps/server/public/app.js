@@ -1,4 +1,5 @@
 import { copy } from './i18n.js';
+import { createCatalogPanel } from './catalog-ui.js';
 const $ = id => document.getElementById(id);
 let token = '';
 let connected = false;
@@ -8,6 +9,7 @@ try { if (localStorage.getItem('easy-eatery-language') === 'en') locale = 'en'; 
 const t = key => copy[locale][key];
 let customerId = `demo-${crypto.randomUUID()}`;
 const formatMoney = amount => new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
+const catalogPanel = createCatalogPanel({ api, t, guard, getRole: () => dashboard?.role, getLocale: () => locale });
 
 async function api(path, body) {
   const requestToken = token;
@@ -91,6 +93,7 @@ function translatePage() {
   document.querySelectorAll('[data-aria]').forEach(node => { node.setAttribute('aria-label', t(node.dataset.aria)); });
   $('error').textContent = '';
   renderDashboard();
+  catalogPanel.render();
 }
 async function refresh() { dashboard = await api('/api/dashboard'); connected = true; renderDashboard(); }
 async function send(text) {
@@ -104,6 +107,7 @@ async function send(text) {
 $('access-form').addEventListener('submit', event => {
   event.preventDefault();
   token = $('key').value;
+  catalogPanel.clear();
   connected = false;
   dashboard = null;
   customerId = `demo-${crypto.randomUUID()}`;

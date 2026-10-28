@@ -8,6 +8,7 @@ import { DemoPaymentProvider, DemoPosProvider, type WhatsAppTransport } from './
 import { parseMessages, validSignature } from './integrations/whatsapp.ts';
 import { errors, localeFrom, type Locale } from './platform/i18n.ts';
 import { AccessError, type Identity, type PostgresRepository } from './persistence/database.ts';
+import { CatalogService } from './platform/catalog.ts';
 
 export type Config = { adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
 
@@ -59,12 +60,12 @@ export function createApp(config: Config, store = new MemoryStore()) {
     }
   });
   app.setErrorHandler((error, request, reply) => {
-    const status = error instanceof DomainError ? 409 : (error as any).statusCode ?? 500;
+    const status = error instanceof DomainError ? (error.code === 'bad_catalog' ? 400 : 409) : (error as any).statusCode ?? 500;
     const locale = localeFrom(request.headers['accept-language']);
     reply.code(status).send({ error: error instanceof DomainError ? errors[locale][error.code] : errors[locale][status === 401 ? 'unauthorized' : status === 403 ? 'forbidden' : status >= 500 ? 'internal' : 'invalid_request'] });
   });
 
-  const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/i18n.js', ['i18n.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
+  const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/catalog-ui.js', ['catalog-ui.js', 'text/javascript']], ['/i18n.js', ['i18n.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
   for (const [route, [file, type]] of assets) {
     app.get(route, async (_request, reply) => reply.type(type).send(await readFile(new URL(`../public/${file}`, import.meta.url), 'utf8')));
   }
@@ -73,6 +74,14 @@ export function createApp(config: Config, store = new MemoryStore()) {
     return { status: 'ok', persistence: config.repository ? 'postgres' : 'memory', pos: 'simulated', payments: 'simulated' };
   });
   app.get('/api/dashboard', async request => run(identities.get(request), 'dashboard.read', ({ orders }) => ({ ...orders.dashboard(), persistence: config.repository ? 'postgres' : 'memory', role: identities.get(request)?.role ?? 'owner' })));
+  app.get('/api/catalog', async request => run(identities.get(request), 'catalog.read', ({ state }) => new CatalogService(state).read()));
+  app.post('/api/catalog', async request => run(identities.get(request), 'catalog.replace', ({ state }) => new CatalogService(state).replace(request.body)));
+  app.post<{ Params: { id: string }; Body: { available: boolean; expectedVersion: number } }>('/api/catalog/products/:id/availability', {
+    schema: { body: { type: 'object', additionalProperties: false, required: ['available', 'expectedVersion'], properties: { available: { type: 'boolean' }, expectedVersion: { type: 'integer', minimum: 1 } } } },
+  }, async request => run(identities.get(request), 'catalog.stock', ({ state }) => new CatalogService(state).stock(request.params.id, request.body.available, request.body.expectedVersion)));
+  app.post<{ Body: { acceptingOrders: boolean; shiftOpen: boolean; expectedVersion: number } }>('/api/catalog/service', {
+    schema: { body: { type: 'object', additionalProperties: false, required: ['acceptingOrders', 'shiftOpen', 'expectedVersion'], properties: { acceptingOrders: { type: 'boolean' }, shiftOpen: { type: 'boolean' }, expectedVersion: { type: 'integer', minimum: 1 } } } },
+  }, async request => run(identities.get(request), 'catalog.service', ({ state }) => new CatalogService(state).service(request.body.acceptingOrders, request.body.shiftOpen, request.body.expectedVersion)));
   app.post<{ Body: { text: string; customerId: string; messageId?: string; locale?: Locale } }>('/api/demo/messages', {
     schema: { body: { type: 'object', required: ['text', 'customerId'], additionalProperties: false, properties: {
       text: { type: 'string', minLength: 1, maxLength: 1000 },

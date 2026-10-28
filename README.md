@@ -51,6 +51,12 @@ npm run db:revoke -- <token-id>
 
 See [PostgreSQL setup and access design](docs/postgres-storage.md) for another restaurant/branch, sender mapping, migrations, revocation, testing, and operational limits. In PostgreSQL mode the POS selection is stored per branch, so `POS_PROVIDER` does not override database settings.
 
+## Catalog and service availability
+
+Use **Load catalog** below the order workspace. Staff can mark items sold out and pause/close pickup. Owners can edit bilingual names, CLP prices, POS codes, optional extras and local service hours. Price/mapping changes and expired quotes require the customer to review the new total and confirm again. These controls are available in both languages.
+
+An approved developer-assisted manual import is also available through `npm run db:import-catalog -- <catalog.json>` with an individual owner token in `CATALOG_STAFF_TOKEN`. See [catalog format and availability rules](docs/catalog-and-availability.md). Example mappings are synthetic; live Toteat/Fudo ingestion and restaurant approval still need provider access. Apply pending migrations before starting an updated PostgreSQL server.
+
 ```sh
 npm run check
 npm test

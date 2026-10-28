@@ -1,0 +1,20 @@
+{
+  "expectedVersion": 1,
+  "manualApproved": true,
+  "products": [
+    {
+      "id": "1", "name": "Completo italiano", "nameEn": "Italian-style completo",
+      "price": 4500, "available": true,
+      "mappings": { "toteat": "SIM-TOTEAT-1", "fudo": "SIM-FUDO-1" },
+      "modifiers": [
+        { "id": "cheese", "name": "Queso", "nameEn": "Cheese", "price": 500, "available": true,
+          "mappings": { "toteat": "SIM-TOTEAT-CHEESE", "fudo": "SIM-FUDO-CHEESE" } }
+      ]
+    },
+    { "id": "2", "name": "Empanada de pino", "nameEn": "Beef empanada", "price": 3200, "available": true,
+      "mappings": { "toteat": "SIM-TOTEAT-2", "fudo": "SIM-FUDO-2" } },
+    { "id": "3", "name": "Limonada", "nameEn": "Lemonade", "price": 2500, "available": true,
+      "mappings": { "toteat": "SIM-TOTEAT-3", "fudo": "SIM-FUDO-3" } }
+  ],
+  "availability": { "acceptingOrders": true, "shiftOpen": true, "hours": [], "maxAgeMinutes": 1440 }
+}
