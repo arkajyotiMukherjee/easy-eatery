@@ -31,6 +31,10 @@ The simulation payment reference points to the panel; it is not a hosted checkou
 
 Set `POS_PROVIDER=toteat` (default) or `fudo` in `.env` to choose the simulated provider label. Both real adapters require provider access and implementation in #13/#22/#23. If port 3000 is occupied, set `PORT=3311` and open that port instead.
 
+## Durable WhatsApp message processing
+
+PostgreSQL Cloud mode queues signed inbound messages before replying to Meta and processes them asynchronously. Start the normal server after applying migration 004; its worker runs automatically. No additional provider account is needed to test the worker with fixtures. Explicit provider rejections retry with bounded backoff; uncertain sends pause for review. Authenticated `GET /api/whatsapp/delivery` shows scoped queue counts. See [delivery and recovery boundaries](docs/postgres-storage.md#durable-whatsapp-extension-10). Real-phone testing still needs the approved sender/recipient and HTTPS webhook.
+
 ## Pay at pickup without a POS
 
 For memory-only testing set `PAY_AT_PICKUP=true`. For PostgreSQL, apply migrations and configure the specific branch through the developer CLI:
@@ -96,7 +100,7 @@ It creates and removes a randomly named isolated test schema. CI runs both suite
 | Tests | `tests` | Ordering, replay, isolation between conversations, auth, signatures and delivery retry |
 | Delivery plan | `docs` | Scope, decisions, integrations, pilot guide and linked issue backlog |
 
-The deployment baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run and Cloud SQL in Santiago. The server uses Fastify and browser-native UI; React/Next.js can be added without changing domain services. PostgreSQL durability and scoped staff authentication are implemented; asynchronous webhook processing and real-provider payment/POS reconciliation are still required before pilot traffic.
+The deployment baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run and Cloud SQL in Santiago. The server uses Fastify and browser-native UI; React/Next.js can be added without changing domain services. PostgreSQL durability and scoped staff authentication are implemented; durable PostgreSQL webhook processing is implemented, while delivery-status reconciliation, staff recovery and real-provider payment/POS acceptance still require pilot validation.
 
 ## Read next
 
