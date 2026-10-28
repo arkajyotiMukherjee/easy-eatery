@@ -1,5 +1,9 @@
 # Product direction and POC milestones
 
+## Scope update: prospect demo before restaurant onboarding
+
+The founder has no Meta API access or restaurant POS account yet. The first prospect demo will use real WhatsApp, local kitchen fulfillment and pay at pickup, then add independently verified Webpay sandbox checkout. A restaurant POS is not required for that demo. Both Toteat and Fudo remain integrations for the subsequent restaurant pilot described below. See [the account and execution plan](live-demo-onboarding.md) and [standalone-demo issue #27](https://github.com/arkajyotiMukherjee/easy-eatery/issues/27). Current payment/POS adapters are still simulated; this scope update does not claim implementation.
+
 ## First outcome
 
 A customer sends a WhatsApp greeting, sees the restaurant menu, chooses items, confirms a final CLP price, receives an approved hosted checkout link, pays, and collects a restaurant-accepted order. The same order reaches the restaurant's POS/kitchen once. Staff can identify Easy Eatery pickup orders, readiness and exceptions in a dashboard.
@@ -27,17 +31,17 @@ The runnable simulation covers menu → cart → confirmed total → simulated p
 | --- | --- | --- | --- |
 | [M0: pilot and access](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/1) | Restaurant validates the flow; POS access and checkout feasibility proven; owner approves actual providers | Low implementation, high external dependency | #1–#4 |
 | [M1: foundation and demo](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/2) | Repeatable local demo plus durable catalog/orders, tenant authorization and immutable quote contracts | Medium | #5–#8 |
-| [M2: real WhatsApp](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/3) | Permitted recipient completes Spanish flow; signed ingress and durable delivery survive retries/restart | Medium | #9–#12 |
+| [M2: real WhatsApp](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/3) | Permitted recipient completes bilingual local-kitchen/pay-at-pickup flow; durable delivery survives retries/restart; verified Webpay sandbox adds full payment rehearsal | Medium | #9–#12, #14, #27 |
 | [M3: payment and kitchen](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/4) | Verified sandbox payment produces one kitchen-accepted order for each provider; failure recovery and adapter parity verified | Highest, built after access gates | #13–#17, #22–#23 |
 | [M4: customer demo and pilot](https://github.com/arkajyotiMukherjee/easy-eatery/milestone/5) | Regional staging, authenticated operations, runbooks, restaurant acceptance and pilot go/no-go | Medium, final integration | #18–#21 |
 
-Milestones are outcome groups, not a requirement to finish every task in one group before starting another. Start Meta account access early (#9) while catalog work proceeds. Staging (#19) can proceed after durable ingress. Kitchen/payment engineering depends on explicit feasibility results (#2, #3). Provider approval waiting time is not engineering effort and can dominate the schedule.
+Milestones are outcome groups, not a requirement to finish every task in one group before starting another. Start Meta account access early (#9) while catalog work proceeds. Staging (#19) can proceed after durable ingress. POS integration and production payment engineering depend on explicit feasibility results (#2, #3); local kitchen/pay-at-pickup and the independent Webpay sandbox do not. Provider approval waiting time is not engineering effort and can dominate the schedule.
 
 ## Suggested two-person division
 
 The Chile-based partner owns restaurant interviews, Spanish flow feedback, merchant/POS access, menu verification and kitchen rehearsals. The engineering owner builds shared services, transport, adapters, reconciliation and staging. Pair on payment/KDS acceptance and the customer demo. The estimates in issues are planning ranges, not delivery promises; re-estimate after M0 and avoid assigning dates before access is proven.
 
-Critical path: **#1 → #2 → #3; #5 → #6 → #7 → #8 → #10 → #11; #13 + #22 + #14 → #15 → #16 → #23; #17 → #18 → #21**. #9, #19 and #20 have their own dependencies in GitHub. Both POS systems must pass #23 before pilot sign-off.
+Restaurant/POS integration critical path: **#1 → #2 → #3; #5 → #6 → #7 → #8 → #10 → #11; #13 + #22 + #14 → #15 → #16 → #23; #17 → #18 → #21**. #9, #19 and #20 have their own dependencies in GitHub. Both POS systems must pass #23 before pilot sign-off.
 
 ## First pilot release essentials
 

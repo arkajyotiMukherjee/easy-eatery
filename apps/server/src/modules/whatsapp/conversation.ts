@@ -10,10 +10,11 @@ export class Conversation {
   menu(locale: Locale = 'es') {
     const name = this.ordering.store.tenant.name;
     const greeting = locale === 'es' ? `¡Hola! Bienvenido a ${name}. Retiro en el local.` : `Hi! Welcome to ${name}. Pickup at the restaurant.`;
+    const disclaimer = this.ordering.store.tenant.payAtPickup ? (locale === 'en' ? 'Pay at pickup. Staff will accept your order in Easy Eatery.' : 'Paga en el local. El personal aceptará tu pedido en Easy Eatery.') : (locale === 'en' ? 'Payment and kitchen are simulated.' : 'Pago y cocina simulados.');
     return greeting + '\n\n' + this.ordering.store.products.filter(p => p.available)
       .map(p => `${p.id}. ${this.name(p, locale)} — ${money(p.price, locale)}` + (p.modifiers?.filter(m => m.available).map(m => `\n  +${m.id}: ${locale === 'en' ? m.nameEn : m.name} (${money(m.price, locale)})`).join('') ?? '')).join('\n') + '\n\n' +
-      (locale === 'es' ? 'Escribe el número y cantidad, por ejemplo: 1 x 2.\nPara extras: 1+queso x 2 (usa el código del menú).\nEscribe carrito, quitar 1, vaciar o confirmar.\nPrecios finales en CLP. Pago y cocina simulados.\nFor English, type English.' :
-        'Type the item number and quantity, for example: 1 x 2.\nFor extras: 1+cheese x 2 (use the code shown in the menu).\nType cart, remove 1, clear or confirm.\nFinal prices in CLP. Payment and kitchen are simulated.\nPara español, escribe Español.');
+      (locale === 'es' ? `Escribe el número y cantidad, por ejemplo: 1 x 2.\nPara extras: 1+queso x 2 (usa el código del menú).\nEscribe carrito, quitar 1, vaciar o confirmar.\nPrecios finales en CLP. ${disclaimer}\nFor English, type English.` :
+        `Type the item number and quantity, for example: 1 x 2.\nFor extras: 1+cheese x 2 (use the code shown in the menu).\nType cart, remove 1, clear or confirm.\nFinal prices in CLP. ${disclaimer}\nPara español, escribe Español.`);
   }
 
   private name(item: Product | Line, locale: Locale) { return locale === 'en' ? item.nameEn : item.name; }
@@ -58,6 +59,7 @@ export class Conversation {
     const text = commands[input] ?? input.replace(/^remove /, 'quitar ');
     if (text === 'nuevo') {
       if (session.orderId && store.order(session.orderId).status === 'awaiting_payment') {
+        if (store.order(session.orderId).paymentMethod === 'pay_at_pickup') return pick('Tu pedido espera aceptación del personal. Escribe confirmar para ver su estado.', 'Your order is awaiting staff acceptance. Type confirm to review its status.');
         return pick('Hay un pedido pendiente de pago. Escribe confirmar para recuperar su enlace.', 'You have an unpaid order. Type confirm to recover its link.');
       }
       session.orderId = undefined;
@@ -67,6 +69,10 @@ export class Conversation {
     }
     if (text === 'confirmar') {
       const order = await this.ordering.confirm(customerId);
+      const pickupStatus = ({ awaiting_payment: pick('esperando aceptación', 'awaiting staff acceptance'), paid: pick('pago recibido', 'payment received'), preparing: pick('en preparación', 'preparing'), ready: pick('listo para retirar', 'ready for pickup'), collected: pick('retirado', 'collected') })[order.status];
+      if (order.paymentMethod === 'pay_at_pickup') return pick(
+        `Pedido ${order.id.slice(0, 8)} confirmado. Total: ${money(order.total, locale)}. Paga en el local. Estado: ${pickupStatus}. Pago: ${order.paymentState === 'store_paid' ? 'registrado' : 'pendiente'}.`,
+        `Order ${order.id.slice(0, 8)} confirmed. Total: ${money(order.total, locale)}. Pay at pickup. Status: ${pickupStatus}. Payment: ${order.paymentState === 'store_paid' ? 'recorded' : 'due'}.`);
       if (order.status !== 'awaiting_payment') return pick(`Pedido ${order.id.slice(0, 8)} pagado. Escribe nuevo para otro pedido.`, `Order ${order.id.slice(0, 8)} paid. Type new for another order.`);
       return pick(`Pedido ${order.id.slice(0, 8)} confirmado.`, `Order ${order.id.slice(0, 8)} confirmed.`) +
         `\n${order.lines.map(l => `${l.quantity} × ${this.name(l, locale)}`).join('\n')}\n` +

@@ -10,10 +10,11 @@ import { errors, localeFrom, type Locale } from './platform/i18n.ts';
 import { AccessError, type Identity, type PostgresRepository } from './persistence/database.ts';
 import { CatalogService } from './platform/catalog.ts';
 
-export type Config = { adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
+export type Config = { payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
 
 export function createApp(config: Config, store = new MemoryStore()) {
   if (!config.repository && (!config.adminToken || config.adminToken.length < 16)) throw new Error('ADMIN_TOKEN must contain at least 16 characters.');
+  if (config.payAtPickup) store.tenant.payAtPickup = true;
   if (config.posProvider) store.tenant.posProvider = config.posProvider;
   const app = Fastify({ bodyLimit: 128 * 1024, logger: false, ajv: { customOptions: { removeAdditional: false } } });
   const ordering = new OrderingService(store, new DemoPaymentProvider(), new DemoPosProvider());
@@ -71,7 +72,7 @@ export function createApp(config: Config, store = new MemoryStore()) {
   }
   app.get('/health', async () => {
     if (config.repository) await config.repository.pool.query('SELECT 1');
-    return { status: 'ok', persistence: config.repository ? 'postgres' : 'memory', pos: 'simulated', payments: 'simulated' };
+    return { status: 'ok', persistence: config.repository ? 'postgres' : 'memory', pos: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'local' : 'simulated', payments: config.repository ? 'branch-configured' : store.tenant.payAtPickup ? 'pay_at_pickup' : 'simulated' };
   });
   app.get('/api/dashboard', async request => run(identities.get(request), 'dashboard.read', ({ orders }) => ({ ...orders.dashboard(), persistence: config.repository ? 'postgres' : 'memory', role: identities.get(request)?.role ?? 'owner' })));
   app.get('/api/catalog', async request => run(identities.get(request), 'catalog.read', ({ state }) => new CatalogService(state).read()));
@@ -94,6 +95,11 @@ export function createApp(config: Config, store = new MemoryStore()) {
   app.post<{ Params: { id: string } }>('/api/demo/orders/:id/pay', {
     schema: { params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'] } },
   }, async request => run(identities.get(request), 'demo.payment', ({ orders }) => orders.simulatePayment(request.params.id)));
+  for (const action of ['accept', 'record-store-payment'] as const) {
+    app.post<{ Params: { id: string } }>(`/api/pickup/orders/:id/${action}`, {
+      schema: { params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'] } },
+    }, async request => run(identities.get(request), `pickup.${action}`, ({ orders }) => action === 'accept' ? orders.acceptPickup(request.params.id) : orders.recordStorePayment(request.params.id)));
+  }
   app.post<{ Params: { id: string }; Body: { status: OrderStatus } }>('/api/demo/orders/:id/status', {
     schema: {
       params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'] },

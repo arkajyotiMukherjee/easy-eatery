@@ -101,7 +101,7 @@ export class PostgresRepository {
   private async load(client: PoolClient, identity: Scope, branch: any) {
     const scope = [identity.tenantId, identity.branchId];
     const state = new MemoryStore();
-    state.tenant = { id: identity.tenantId, branchId: identity.branchId, name: branch.name, timezone: branch.timezone, posProvider: branch.pos_provider, modules: branch.modules };
+    state.tenant = { id: identity.tenantId, branchId: identity.branchId, name: branch.name, timezone: branch.timezone, payAtPickup: branch.pay_at_pickup, posProvider: branch.pos_provider, modules: branch.modules };
     state.catalog = { version: branch.catalog_version, source: branch.catalog_source, updatedAt: branch.catalog_updated_at.toISOString() };
     state.availability = branch.service_availability;
     const products = await client.query('SELECT * FROM products WHERE tenant_id=$1 AND branch_id=$2 ORDER BY id', scope);
@@ -111,7 +111,7 @@ export class PostgresRepository {
     for (const row of orders.rows) {
       state.orders.set(row.id, {
         id: row.id, tenantId: identity.tenantId, branchId: identity.branchId, customerId: row.customer_id,
-        source: row.source, currency: row.currency, total: row.total, status: row.status, posProvider: row.pos_provider,
+        paymentMethod: row.payment_method, paymentState: row.payment_state, fulfillment: row.fulfillment, source: row.source, currency: row.currency, total: row.total, status: row.status, posProvider: row.pos_provider,
         createdAt: row.created_at.toISOString(), paymentReference: row.payment_reference ?? undefined, posReference: row.pos_reference ?? undefined, catalogVersion: row.catalog_version ?? undefined,
         lines: lines.rows.filter(l => l.order_id === row.id).map(l => ({ productId: l.product_id, name: l.name, nameEn: l.name_en, unitPrice: l.unit_price, quantity: l.quantity, ...l.selection })),
       });
@@ -135,22 +135,22 @@ export class PostgresRepository {
     for (const o of state.orders.values()) {
       if (o.tenantId !== state.tenant.id || o.branchId !== state.tenant.branchId) throw new AccessError(403);
       if (o.total !== o.lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0)) throw new Error('Order total does not match its lines');
-      await client.query(`INSERT INTO orders(tenant_id,branch_id,id,customer_id,source,currency,total,status,pos_provider,payment_reference,pos_reference,created_at,catalog_version)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-        ON CONFLICT(tenant_id,branch_id,id) DO UPDATE SET status=EXCLUDED.status,payment_reference=EXCLUDED.payment_reference,pos_reference=EXCLUDED.pos_reference`,
-      [...scope, o.id, o.customerId, o.source, o.currency, o.total, o.status, o.posProvider, o.paymentReference, o.posReference, o.createdAt, o.catalogVersion]);
+      await client.query(`INSERT INTO orders(tenant_id,branch_id,id,customer_id,source,currency,total,status,pos_provider,payment_reference,pos_reference,created_at,catalog_version,payment_method,payment_state,fulfillment)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+        ON CONFLICT(tenant_id,branch_id,id) DO UPDATE SET status=EXCLUDED.status,payment_state=EXCLUDED.payment_state,payment_reference=EXCLUDED.payment_reference,pos_reference=EXCLUDED.pos_reference`,
+      [...scope, o.id, o.customerId, o.source, o.currency, o.total, o.status, o.posProvider, o.paymentReference, o.posReference, o.createdAt, o.catalogVersion, o.paymentMethod ?? 'simulation', o.paymentState ?? 'due', o.fulfillment ?? 'simulation']);
       if (!before.has(o.id)) {
         for (const [index, line] of o.lines.entries()) await client.query(`INSERT INTO order_lines(tenant_id,branch_id,order_id,line_number,product_id,name,name_en,unit_price,quantity,selection)
           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, [...scope, o.id, index, line.productId, line.name, line.nameEn, line.unitPrice, line.quantity, JSON.stringify({ ...(line.providerProductId ? { providerProductId: line.providerProductId } : {}), ...(line.modifiers ? { modifiers: line.modifiers } : {}) })]);
       } else {
         const original = before.get(o.id)!;
-        if (o.total !== original.total || o.customerId !== original.customerId || o.posProvider !== original.posProvider || o.catalogVersion !== original.catalogVersion || !isDeepStrictEqual(o.lines, original.lines)) throw new Error('Confirmed order snapshot is immutable');
+        if (o.paymentMethod !== original.paymentMethod || o.fulfillment !== original.fulfillment || o.total !== original.total || o.customerId !== original.customerId || o.posProvider !== original.posProvider || o.catalogVersion !== original.catalogVersion || !isDeepStrictEqual(o.lines, original.lines)) throw new Error('Confirmed order snapshot is immutable');
       }
       if (o.paymentReference) await client.query(`INSERT INTO payment_attempts(tenant_id,branch_id,reference,order_id,provider,amount,currency,status)
         VALUES($1,$2,$3,$4,'simulation',$5,$6,$7) ON CONFLICT(tenant_id,branch_id,reference) DO UPDATE SET status=EXCLUDED.status`,
-      [...scope, o.paymentReference, o.id, o.total, o.currency, o.status === 'awaiting_payment' ? 'pending' : 'simulated_paid']);
-      if (before.get(o.id)?.status !== o.status) await client.query(`INSERT INTO outbox(tenant_id,branch_id,event_key,event_type,order_id,payload)
-        VALUES($1,$2,$3,'order.state_changed',$4,$5) ON CONFLICT DO NOTHING`, [...scope, `${o.id}:${o.status}`, o.id, JSON.stringify({ orderId: o.id, status: o.status, posProvider: o.posProvider })]);
+      [...scope, o.paymentReference, o.id, o.total, o.currency, o.paymentState === 'simulated_paid' ? 'simulated_paid' : 'pending']);
+      if (before.get(o.id)?.status !== o.status || before.get(o.id)?.paymentState !== o.paymentState) await client.query(`INSERT INTO outbox(tenant_id,branch_id,event_key,event_type,order_id,payload)
+        VALUES($1,$2,$3,'order.state_changed',$4,$5) ON CONFLICT DO NOTHING`, [...scope, `${o.id}:${o.status}:${o.paymentState}`, o.id, JSON.stringify({ orderId: o.id, status: o.status, paymentState: o.paymentState, fulfillment: o.fulfillment, posProvider: o.posProvider })]);
     }
     for (const [key, session] of state.sessions) {
       const customerId = key.slice(state.tenant.id.length + 1);
