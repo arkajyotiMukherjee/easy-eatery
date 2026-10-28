@@ -61,7 +61,9 @@
     "number": 12,
     "url": "https://github.com/arkajyotiMukherjee/easy-eatery/issues/12",
     "pending_evidence": "docs/issue-evidence.md",
-    "github_update_status": "blocked_api_proxy_forbidden"
+    "github_update_status": "blocked_api_proxy_forbidden",
+    "implementation_status": "complete_ready_for_local_closure",
+    "closure_evidence": "docs/completed-issues.md"
   },
   {
     "id": "P13",

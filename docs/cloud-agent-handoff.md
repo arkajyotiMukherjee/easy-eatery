@@ -86,6 +86,14 @@ Default memory/console startup is prepared. The environment draft stores install
 
 GitHub public issue pages were readable; API requests remained denied by the runtime proxy. Pending issue updates are preserved in `docs/issue-evidence.md`; no live criterion or issue closure is claimed. `docs/pos-readiness.md` and synthetic POS-boundary tests distinguish implemented local port behavior from unverified vendor contracts.
 
+## Main integration and issue closure review: 29 October 2026
+
+The owner explicitly authorized merging all prepared changes to main. After fresh type/browser syntax checks, 28 application tests, 43 PostgreSQL TAP results and context freshness passed, a normal non-force Git fast-forward advanced remote `main` from `0b40700` to `79e6483`. Git read-back verified that main contained the complete pilot-readiness branch. No PR was created or merged through the API; REST/GraphQL still returned proxy Forbidden. This integration was not a deployment or proof of current GitHub Actions conclusions.
+
+Issue #12 is complete at the implementation scope: durable bilingual human-help paths (including rejected-order requests), state-derived pickup notifications, verified service-window enforcement with staff fallback, and rejection/ambiguity/late-readiness/privacy tests. A targeted signed rejected-order request also verified durable handoff, scoped staff visibility and replay deduplication with a fake transport. It is ready for the owner to close locally after adding the implementation evidence. Actual phone acceptance remains in #9/#27 and is not claimed by closing this implementation issue. Issues #5/#6 were already closed. The other open issues retain incomplete state, checkout delivery, provider, reconciliation, staging, policy or restaurant criteria; no milestone qualifies for closure.
+
+No issue or milestone was closed by this cloud task. See `docs/completed-issues.md` for the owner’s local CLI command. Earlier PR-only instructions below are historical and are superseded by the owner’s explicit normal-Git integration authorization. Do not create a redundant PR for changes already contained in main.
+
 ## Published Git branch and review status
 
 Implementation commits `985e7de` and `65167d5` were pushed to `codex/pilot-readiness`. The checkout is based on verified `main` commit `0b4070001a734fc6cc66ba630ea78c1ce4a166ab`; main was not changed or merged. Draft PR creation was attempted with the prepared description and failed at the GitHub GraphQL proxy with Forbidden. No PR URL or live issue update is claimed. The branch is available for review; pending issue evidence remains in `docs/issue-evidence.md`. The local environment configuration is saved as a draft and still requires user review/save and publication.

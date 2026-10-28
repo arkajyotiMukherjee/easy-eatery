@@ -255,7 +255,9 @@
         "Enforce the applicable customer-service window; use an approved utility template outside it or route to staff.",
         "Test failed delivery, late readiness, and no marketing messages or sensitive payment data in chat."
       ],
-      "doc": "docs/demo-and-pilot.md"
+      "doc": "docs/demo-and-pilot.md",
+      "implementation_status": "complete_ready_for_local_closure",
+      "closure_evidence": "docs/completed-issues.md"
     },
     {
       "id": "P13",
@@ -538,6 +540,16 @@
       "985e7de",
       "65167d5"
     ],
-    "pull_request_status": "creation_blocked_graphql_proxy_forbidden"
+    "pull_request_status": "not_created; changes integrated via owner-authorized normal Git fast-forward",
+    "main_integration": {
+      "date": "2026-10-29",
+      "method": "normal_git_fast_forward",
+      "implementation_tip": "79e648352d7c19cd698498eb2a453c30354eb3e7",
+      "github_actions_status": "not_observable_from_cloud_api"
+    },
+    "ready_to_close_issues": [
+      12
+    ],
+    "completed_milestones": []
   }
 }

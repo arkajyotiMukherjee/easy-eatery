@@ -78,6 +78,13 @@
         "apps/server/src/integrations/webpay.ts",
         "scripts/rehearse-demo.ts"
       ]
+    },
+    {
+      "id": "main-integration",
+      "title": "Evidence: pilot changes integrated into main by authorized normal fast-forward",
+      "detail": "On29October remote main was verified at79e6483 after fresh28 application tests,43 PostgreSQL TAP results, type/browser syntax and context checks passed. Issue12 implementation is ready for local closure;5/6 already closed. Real-device acceptance remains9/27; other issue criteria and all milestones remain incomplete. No cloud API issue/milestone write occurred.",
+      "source": "docs/cloud-agent-handoff.md",
+      "code_paths": []
     }
   ]
 }

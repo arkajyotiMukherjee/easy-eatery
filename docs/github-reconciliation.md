@@ -1,5 +1,9 @@
 # GitHub reconciliation handoff for the local Mac
 
+## Integration update
+
+The owner subsequently authorized direct integration through available Git. After all required local checks passed, remote main was normally fast-forwarded to `79e6483` and verified against the review branch. Do not create or merge a redundant PR for that branch; the original PR plan below is historical. The API and Mac bridge remain unavailable from the cloud task. Issue #12 is ready for implementation closure locally, while #5/#6 are already closed. See `docs/completed-issues.md`; all other issues/milestones retain their outstanding criteria.
+
 Review date: 29 October 2026. The owner explicitly authorized updating GitHub issues, merging the required PRs and closing completed milestones. No further confirmation of those actions is required. Use the local Mac's existing GitHub CLI authentication; never copy credentials into this repository or the cloud chat.
 
 ## Current access and repository evidence

@@ -1,7 +1,7 @@
 {
   "artifact_hashes": {
-    "graphify-out/GRAPH_REPORT.md": "20aeb0c8cc01e337bc23c566db945de34b582621fdb7a199991598763850baef",
-    "graphify-out/graph.json": "9b0932dc60eaee26bbd133998fa542a44ebb6b01ea38568be32ecb58272b3fc6"
+    "graphify-out/GRAPH_REPORT.md": "0770b7a6cb3c7721294f74ced6e33bbc2bda31465001de3a5b00ca5bc3b2a81c",
+    "graphify-out/graph.json": "5e15db5eb49d119facf0302408aeb40a762e55409777d379198d44262ddd988a"
   },
   "format_version": 1,
   "graphify_version": "0.9.97",
@@ -48,14 +48,15 @@
     "compose.yaml": "7317ef25c3e55fe7d239ab20ca85c0e2d2b3bf24565b8387e833d2c6afda2ef3",
     "docs/AGENTS.md": "f8952383b79995e0f77bf16010f8c4fac0bf18ed963027101d833b1bf503d356",
     "docs/architecture.md": "d46c78d8830bd0b73923f5f26e18d886e8385debdf553615e5b64479b16b0425",
-    "docs/backlog.json": "9356aca5768f71cb40c5e74e15d4a921cdd062d57935e7a95753f338d2d6a47b",
-    "docs/backlog.md": "ed83828bd811163ee0102deb8100bf189e8fc6e446bf4a1b87ca2c502f8a35d9",
+    "docs/backlog.json": "c37673f948bc26f201d9793ac8469356a719dbb4d664ed22ccb9b1f9b6d40d93",
+    "docs/backlog.md": "54392dac3bb780c844190ff30696ad2b984f70fbf4dbf19643af18334d75a5cd",
     "docs/catalog-and-availability.md": "d48c4d827837ec74fcf07ae514491ce6659003369d09b86a8a612c2ab120e620",
-    "docs/cloud-agent-handoff.md": "1ba0889f677cb4ac44dce9591a54fa4f7b9ac470354331d134d8f6ec029b61bd",
-    "docs/context-decisions.json": "4f8ca74894adff48016b72244af0207585c942c9516023c5c51b6f6061a0d8c3",
+    "docs/cloud-agent-handoff.md": "609d6245cb038677e9d4b6e84e3982b303078ca028781ca58d176e509c70f4ae",
+    "docs/completed-issues.md": "06d23b51488b972bc94001e3c6f290c39f837a384631a11005132d316ed2799f",
+    "docs/context-decisions.json": "f416817cacc741e7d010362eab18bc0e55e4b6257f152fe645506f42eb113ca9",
     "docs/demo-and-pilot.md": "82d96bf0b505636073a04afc1b83ace298d3a0813dd7d1681ecd51743a6d2a14",
-    "docs/github-issues.json": "3ca13b9e4d917aae1d18a3cdf0c49ca191fc3b98e5a127cd5be7ef62eb848345",
-    "docs/github-reconciliation.md": "c65f66ddb4d8eaec02efe96f85efd355675f50c8dc153fa19bfcd6e0a5370faa",
+    "docs/github-issues.json": "b3584f64081459bdaa31cdd67f8857e8898977ff0d2d88ef13e4a328b0d183d4",
+    "docs/github-reconciliation.md": "b516051da6aa07e6163663836537d98248500e33a3d3c72b8eb1c43e95ca51ac",
     "docs/graphify.md": "d744459d3c9000a01c57a62fa1dc316220225f6a7d9ff076f3d5338839792a73",
     "docs/integrations.md": "3204bf4f9c3f99c051ed0c5af663e37ed4241c1fef59586b9865dc6cdada98c0",
     "docs/issue-evidence.md": "5abfe6026d375ed28bedfd7e1540fe44b58219c44fbf1b380dbfbf3fa5493b75",
