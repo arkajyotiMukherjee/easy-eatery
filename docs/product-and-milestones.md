@@ -19,7 +19,7 @@ WhatsApp accesses the catalog directly through shared services. Disabling QR men
 
 ## What is complete in this change
 
-The runnable simulation covers menu → cart → confirmed total → simulated payment → simulated kitchen → ready → collected. It demonstrates independence from QR menu, counts pickups and has critical-path tests. A Cloud API test transport and signed webhook route are scaffolded and tested with fixtures. No live Meta account, POS account, checkout, actual kitchen handoff, database or cloud environment has been connected or verified.
+The runnable simulation covers menu → cart → confirmed total → simulated payment → simulated kitchen → ready → collected. It demonstrates independence from QR menu, counts pickups and has critical-path tests. A Cloud API test transport and signed webhook route are scaffolded and tested with fixtures. The initial foundation PR did not connect real providers or a database. Issue #6 adds optional PostgreSQL persistence and scoped staff access; live Meta/POS/checkout/kitchen and cloud deployment still require their own acceptance gates.
 
 ## Delivery gates
 

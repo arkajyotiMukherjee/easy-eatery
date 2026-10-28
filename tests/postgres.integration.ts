@@ -1,0 +1,179 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHmac, randomUUID } from 'node:crypto';
+import { Pool } from 'pg';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { createApp } from '../apps/server/src/app.ts';
+import { issueStaffToken, migrate, PostgresRepository, seedBranch } from '../apps/server/src/persistence/database.ts';
+
+const url = process.env.TEST_DATABASE_URL;
+if (!url) throw new Error('Set TEST_DATABASE_URL to run the real PostgreSQL integration suite.');
+
+test('PostgreSQL persistence and restaurant-scoped access', async t => {
+  const admin = new Pool({ connectionString: url });
+  const schema = `ee_test_${randomUUID().replaceAll('-', '')}`;
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const pool = new Pool({ connectionString: url, max: 8, options: `-c search_path=${schema}` });
+  const repository = new PostgresRepository(pool);
+  t.after(async () => { await pool.end(); await admin.query(`DROP SCHEMA ${schema} CASCADE`); await admin.end(); });
+  await migrate(pool);
+  await migrate(pool);
+  const a = { tenantId: 'restaurant-a', branchId: 'main' };
+  const b = { tenantId: 'restaurant-b', branchId: 'main' };
+  const aOther = { tenantId: 'restaurant-a', branchId: 'second' };
+  await seedBranch(pool, a, 'Mesa Sur', 'toteat', '111');
+  await seedBranch(pool, b, 'Otra Mesa', 'fudo', '222');
+  await seedBranch(pool, aOther, 'Mesa Norte', 'fudo', '333');
+  const owner = await issueStaffToken(pool, a, 'Owner A', 'owner');
+  const operator = await issueStaffToken(pool, a, 'Staff A', 'operator');
+  const viewer = await issueStaffToken(pool, a, 'Viewer A', 'viewer');
+  const otherOwner = await issueStaffToken(pool, b, 'Owner B', 'owner');
+  const otherBranchOwner = await issueStaffToken(pool, aOther, 'Owner second branch', 'owner');
+  const headers = (token: string) => ({ authorization: `Bearer ${token}`, 'accept-language': 'en' });
+  const { app } = createApp({ repository });
+  t.after(() => app.close());
+  let orderId: string;
+  const send = async (text: string, messageId: string, token = owner.token) => {
+    const result = await app.inject({ method: 'POST', url: '/api/demo/messages', headers: headers(token), payload: { customerId: 'test-customer', messageId, text, locale: 'en' } });
+    assert.equal(result.statusCode, 200, result.body);
+    return result.json().reply;
+  };
+
+  await t.test('migration/seed is repeatable and tokens are hashed and restaurant scoped', async () => {
+    assert.equal((await pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count, '1');
+    await seedBranch(pool, a, 'Ignored new name', 'fudo', '111');
+    assert.equal((await pool.query('SELECT count(*) FROM products')).rows[0].count, '9');
+    const identity = await repository.authenticate(owner.token);
+    assert.equal(identity?.tenantId, a.tenantId);
+    const hash = (await pool.query('SELECT token_hash FROM access_tokens WHERE id=$1', [owner.tokenId])).rows[0].token_hash;
+    assert.equal(hash.length, 64);
+    assert.notEqual(hash, owner.token);
+    assert.equal((await app.inject({ url: '/api/dashboard', headers: headers('replace-with-a-long-random-value') })).statusCode, 401);
+    assert.equal((await app.inject({ url: '/health' })).json().persistence, 'postgres');
+  });
+
+  await t.test('concurrent app instances deduplicate carts and confirmation under a branch lock', async () => {
+    const second = createApp({ repository: new PostgresRepository(pool) });
+    try {
+      await Promise.all([send('1 x 2', 'same-event'), second.app.inject({ method: 'POST', url: '/api/demo/messages', headers: headers(owner.token), payload: { customerId: 'test-customer', messageId: 'same-event', text: '1 x 2', locale: 'en' } })]);
+      await Promise.all([send('confirm', 'confirm-one'), send('confirm', 'confirm-two')]);
+      const orders = (await app.inject({ url: '/api/dashboard', headers: headers(owner.token) })).json().orders;
+      assert.equal(orders.length, 1);
+      assert.equal(orders[0].total, 9000);
+      assert.equal(orders[0].lines[0].quantity, 2);
+      orderId = orders[0].id;
+      assert.equal((await pool.query('SELECT count(*) FROM order_lines')).rows[0].count, '1');
+      assert.equal((await pool.query('SELECT count(*) FROM payment_attempts')).rows[0].count, '1');
+      assert.equal((await pool.query('SELECT count(*) FROM outbox')).rows[0].count, '1');
+    } finally { await second.app.close(); }
+  });
+
+  await t.test('restaurant and branch isolation protects reads, writes, and requested scope overrides', async () => {
+    for (const token of [otherOwner.token, otherBranchOwner.token]) {
+      const result = await app.inject({ url: '/api/dashboard?tenantId=restaurant-a&branchId=main', headers: { ...headers(token), 'x-tenant-id': a.tenantId } });
+      assert.equal(result.statusCode, 200);
+      assert.equal(result.json().orders.length, 0);
+      const write = await app.inject({ method: 'POST', url: `/api/demo/orders/${orderId}/pay`, headers: headers(token) });
+      assert.equal(write.statusCode, 409);
+      assert.match(write.json().error, /not found/);
+    }
+    const injectedScope = await app.inject({ method: 'POST', url: '/api/demo/messages', headers: headers(owner.token), payload: { customerId: 'a', text: 'confirm', tenantId: b.tenantId } });
+    assert.equal(injectedScope.statusCode, 400);
+    const identity = (await repository.authenticate(owner.token))!;
+    await assert.rejects(repository.transaction(identity, 'test.scope', state => { state.tenant.id = b.tenantId; }));
+  });
+
+  await t.test('composite foreign keys reject cross-tenant and cross-branch references', async () => {
+    await assert.rejects(pool.query(`INSERT INTO order_lines(tenant_id,branch_id,order_id,line_number,product_id,name,name_en,unit_price,quantity)
+      VALUES($1,$2,$3,0,'1','x','x',1,1)`, [b.tenantId, b.branchId, orderId]), { code: '23503' });
+    await assert.rejects(pool.query(`INSERT INTO conversations(tenant_id,branch_id,customer_id,locale,cart,order_id,expires_at)
+      VALUES($1,$2,'bad-reference','en','[]',$3,now())`, [aOther.tenantId, aOther.branchId, orderId]), { code: '23503' });
+  });
+
+  await t.test('staff roles and revoked/expired/deactivated credentials fail closed', async () => {
+    assert.equal((await app.inject({ url: '/api/dashboard', headers: headers(viewer.token) })).statusCode, 200);
+    assert.equal((await app.inject({ method: 'POST', url: `/api/demo/orders/${orderId}/pay`, headers: headers(viewer.token) })).statusCode, 403);
+    assert.equal((await app.inject({ method: 'POST', url: `/api/demo/orders/${orderId}/pay`, headers: headers(operator.token) })).statusCode, 200);
+    await pool.query('UPDATE access_tokens SET revoked_at=now() WHERE id=$1', [viewer.tokenId]);
+    assert.equal((await app.inject({ url: '/api/dashboard', headers: headers(viewer.token) })).statusCode, 401);
+    await pool.query("UPDATE access_tokens SET expires_at=now()-interval '1 second' WHERE id=$1", [otherOwner.tokenId]);
+    assert.equal(await repository.authenticate(otherOwner.token), null);
+    await pool.query('UPDATE memberships SET active=false WHERE user_id=$1', [otherBranchOwner.userId]);
+    assert.equal(await repository.authenticate(otherBranchOwner.token), null);
+    // Role revocation between request authentication and work is checked again.
+    const identity = (await repository.authenticate(operator.token))!;
+    await pool.query("UPDATE memberships SET role='viewer' WHERE user_id=$1", [operator.userId]);
+    await assert.rejects(repository.transaction(identity, 'demo.payment', () => {}));
+  });
+
+  await t.test('database writes and audit/outbox rows roll back together on failure', async () => {
+    const identity = (await repository.authenticate(owner.token))!;
+    const before = (await pool.query('SELECT count(*) FROM audit_events')).rows[0].count;
+    const outboxBefore = (await pool.query('SELECT count(*) FROM outbox')).rows[0].count;
+    await assert.rejects(repository.transaction(identity, 'test.rollback', state => {
+      state.session('rollback-customer').cart.set('1', 1);
+      state.createOrder('rollback-customer', state.session('rollback-customer').cart);
+      // Fail after the new order, lines and outbox event have been staged in SQL.
+      state.session('rollback-customer').locale = 'invalid' as any;
+    }), { code: '23514' });
+    assert.equal((await pool.query('SELECT count(*) FROM orders')).rows[0].count, '1');
+    assert.equal((await pool.query('SELECT count(*) FROM audit_events')).rows[0].count, before);
+    assert.equal((await pool.query('SELECT count(*) FROM outbox')).rows[0].count, outboxBefore);
+    assert.equal((await pool.query("SELECT count(*) FROM conversations WHERE customer_id='rollback-customer'")).rows[0].count, '0');
+    await assert.rejects(repository.transaction(identity, 'test.immutable', state => { state.order(orderId).lines[0].unitPrice = 1; }));
+  });
+
+  await t.test('new connection pool/app recovers orders, sessions, payment and POS state', async () => {
+    const freshPool = new Pool({ connectionString: url, options: `-c search_path=${schema}` });
+    const fresh = createApp({ repository: new PostgresRepository(freshPool) });
+    try {
+      const dashboard = (await fresh.app.inject({ url: '/api/dashboard', headers: headers(owner.token) })).json();
+      assert.equal(dashboard.orders[0].id, orderId);
+      assert.equal(dashboard.orders[0].status, 'preparing');
+      assert.equal(dashboard.orders[0].posReference, `demo-kitchen-toteat-${orderId}`);
+      assert.equal(dashboard.orders[0].customerId, undefined);
+      assert.equal(dashboard.metrics.paidRevenue, 9000);
+      const replay = await fresh.app.inject({ method: 'POST', url: '/api/demo/messages', headers: headers(owner.token), payload: { customerId: 'test-customer', messageId: 'same-event', text: '1 x 2', locale: 'en' } });
+      assert.match(replay.json().reply, /9,000/);
+      assert.equal((await pool.query('SELECT status FROM payment_attempts')).rows[0].status, 'simulated_paid');
+    } finally { await fresh.app.close(); await freshPool.end(); }
+    const script = `import { Pool } from 'pg';
+      import { createApp } from './apps/server/src/app.ts';
+      import { PostgresRepository } from './apps/server/src/persistence/database.ts';
+      const pool = new Pool({connectionString:process.env.TEST_DATABASE_URL, options:'-c search_path='+process.env.EE_TEST_SCHEMA});
+      const {app}=createApp({repository:new PostgresRepository(pool)});
+      try { const result=await app.inject({url:'/api/dashboard',headers:{authorization:'Bearer '+process.env.EE_TEST_TOKEN}});
+        if(result.statusCode!==200) throw new Error('Child process authentication failed');
+        console.log(JSON.stringify({id:result.json().orders[0].id,total:result.json().metrics.paidRevenue}));
+      } finally { await app.close(); await pool.end(); }`;
+    const child = await promisify(execFile)(process.execPath, ['--import', 'tsx', '--input-type=module', '--eval', script], {
+      env: { ...process.env, EE_TEST_SCHEMA: schema, EE_TEST_TOKEN: owner.token }, timeout: 15000,
+    });
+    assert.deepEqual(JSON.parse(child.stdout), { id: orderId, total: 9000 });
+  });
+
+  await t.test('signed callbacks map receiving phone IDs server-side and survive replay after restart', async () => {
+    const sent: string[] = [];
+    const config = { repository, appSecret: 'test-app-secret', phoneId: '111', transport: { sendText: async (_to: string, text: string) => { sent.push(text); } } };
+    const payload = (phone: string) => JSON.stringify({ object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: phone }, messages: [{ id: 'callback-one', from: 'callback-customer', type: 'text', text: { body: '2' } }] } }] }] });
+    const deliver = (target: ReturnType<typeof createApp>, body: string) => target.app.inject({ method: 'POST', url: '/webhooks/whatsapp', headers: { 'content-type': 'application/json', 'x-hub-signature-256': 'sha256=' + createHmac('sha256', 'test-app-secret').update(body).digest('hex') }, payload: body });
+    const first = createApp(config);
+    assert.equal((await deliver(first, payload('222'))).statusCode, 200);
+    assert.equal(sent.length, 0);
+    assert.equal((await deliver(first, payload('111'))).statusCode, 200);
+    await first.app.close();
+    const restarted = createApp(config);
+    assert.equal((await deliver(restarted, payload('111'))).statusCode, 200);
+    await restarted.app.close();
+    assert.equal(sent.length, 1);
+    const rows = await pool.query("SELECT tenant_id,branch_id,cart FROM conversations WHERE customer_id='callback-customer'");
+    assert.equal(rows.rows.length, 1);
+    assert.equal(rows.rows[0].tenant_id, a.tenantId);
+    assert.deepEqual(rows.rows[0].cart, [['2', 1]]);
+    const unknown = createApp({ ...config, phoneId: '999' });
+    assert.equal((await deliver(unknown, payload('999'))).statusCode, 403);
+    await unknown.app.close();
+    await assert.rejects(seedBranch(pool, b, 'Other', 'fudo', '111'), /another branch/);
+  });
+});

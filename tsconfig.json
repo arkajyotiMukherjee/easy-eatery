@@ -5,5 +5,5 @@
     "forceConsistentCasingInFileNames": true, "skipLibCheck": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["apps/server/src/**/*.ts", "tests/**/*.ts"]
+  "include": ["apps/server/src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"]
 }

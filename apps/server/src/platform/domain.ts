@@ -5,19 +5,19 @@ export type OrderStatus = 'awaiting_payment' | 'paid' | 'preparing' | 'ready' | 
 export type Product = { id: string; name: string; nameEn: string; price: number; available: boolean };
 export type Line = { productId: string; name: string; nameEn: string; unitPrice: number; quantity: number };
 export type Order = {
-  id: string; tenantId: string; customerId: string; source: 'whatsapp';
+  id: string; tenantId: string; branchId: string; customerId: string; source: 'whatsapp';
   currency: 'CLP'; lines: Line[]; total: number; status: OrderStatus;
   createdAt: string; paymentReference?: string; posReference?: string; posProvider: 'toteat' | 'fudo';
 };
 export type Session = { cart: Map<string, number>; orderId?: string; expiresAt: number; locale: Locale };
 export type Tenant = {
-  id: string; name: string; timezone: string;
+  id: string; branchId: string; name: string; timezone: string;
   modules: { whatsappOrdering: boolean; qrMenu: boolean };
   posProvider: 'toteat' | 'fudo';
 };
 
 export const demoTenant: Tenant = {
-  id: 'santiago-demo', name: 'Mesa Sur', timezone: 'America/Santiago',
+  id: 'santiago-demo', branchId: 'main', name: 'Mesa Sur', timezone: 'America/Santiago',
   modules: { whatsappOrdering: true, qrMenu: false }, posProvider: 'toteat',
 };
 
@@ -36,6 +36,7 @@ export class MemoryStore {
   orders = new Map<string, Order>();
   sessions = new Map<string, Session>();
   inbox = new Map<string, string>();
+  delivered = new Set<string>();
 
   session(customerId: string): Session {
     const key = `${this.tenant.id}:${customerId}`;
@@ -60,7 +61,7 @@ export class MemoryStore {
   createOrder(customerId: string, cart: Map<string, number>): Order {
     const lines = this.quote(cart);
     const order: Order = {
-      id: randomUUID(), tenantId: this.tenant.id, customerId, source: 'whatsapp',
+      id: randomUUID(), tenantId: this.tenant.id, branchId: this.tenant.branchId, customerId, source: 'whatsapp',
       currency: 'CLP', lines, total: lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
       status: 'awaiting_payment', createdAt: new Date().toISOString(), posProvider: this.tenant.posProvider,
     };
@@ -70,7 +71,7 @@ export class MemoryStore {
 
   order(id: string): Order {
     const order = this.orders.get(id);
-    if (!order || order.tenantId !== this.tenant.id) throw new DomainError('order_missing');
+    if (!order || order.tenantId !== this.tenant.id || order.branchId !== this.tenant.branchId) throw new DomainError('order_missing');
     return order;
   }
 }

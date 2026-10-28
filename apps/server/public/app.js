@@ -6,16 +6,18 @@ let dashboard = null;
 let locale = 'es';
 try { if (localStorage.getItem('easy-eatery-language') === 'en') locale = 'en'; } catch {}
 const t = key => copy[locale][key];
-const customerId = `demo-${crypto.randomUUID()}`;
+let customerId = `demo-${crypto.randomUUID()}`;
 const formatMoney = amount => new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(amount);
 
 async function api(path, body) {
+  const requestToken = token;
   const response = await fetch(path, {
     method: body === undefined ? 'GET' : 'POST', signal: AbortSignal.timeout(15000),
-    headers: { Authorization: `Bearer ${token}`, 'Accept-Language': locale, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+    headers: { Authorization: `Bearer ${requestToken}`, 'Accept-Language': locale, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   const result = await response.json();
+  if (requestToken !== token) throw new Error(t('error'));
   if (!response.ok) throw new Error(result.error ?? t('error'));
   return result;
 }
@@ -44,6 +46,13 @@ function renderDashboard() {
   $('revenue').textContent = formatMoney(data?.metrics.paidRevenue ?? 0);
   $('collected-count').textContent = data?.metrics.collected ?? 0;
   $('connection').textContent = t(connected ? 'connected' : 'disconnected');
+  if (data?.role === 'viewer') $('connection').textContent += ` · ${t('readOnly')}`;
+  $('restaurant-heading').textContent = data ? `${data.tenant.name} · ${data.tenant.branchId}` : 'EASY EATERY · CHILE';
+  $('restaurant-name').textContent = data?.tenant.name ?? 'Easy Eatery';
+  $('restaurant-avatar').textContent = (data?.tenant.name ?? 'Easy Eatery').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase();
+  $('persistence-note').textContent = !data ? t('storageUnknown') : t(data.persistence === 'postgres' ? 'postgresStorage' : 'demoReset');
+  document.querySelectorAll('[data-message], #chat-form button').forEach(button => { button.disabled = data?.role === 'viewer'; });
+  $('message').readOnly = data?.role === 'viewer';
   $('provider').textContent = data ? `${t('provider')}: ${data.tenant.posProvider === 'fudo' ? 'Fudo' : 'Toteat'}` : '';
   if (!data?.orders.length) {
     const empty = element('div', '', 'empty');
@@ -60,7 +69,7 @@ function renderDashboard() {
     const action = order.status === 'awaiting_payment' || order.status === 'paid' ? ['pay', 'pay', {}] :
       order.status === 'preparing' ? ['ready', 'status', { status: 'ready' }] :
       order.status === 'ready' ? ['collect', 'status', { status: 'collected' }] : null;
-    if (action) {
+    if (action && data.role !== 'viewer') {
       const button = element('button', t(action[0]));
       button.type = 'button';
       button.addEventListener('click', () => guard(async () => {
@@ -95,6 +104,11 @@ async function send(text) {
 $('access-form').addEventListener('submit', event => {
   event.preventDefault();
   token = $('key').value;
+  connected = false;
+  dashboard = null;
+  customerId = `demo-${crypto.randomUUID()}`;
+  $('messages').replaceChildren(element('p', t('chatHint'), 'chat-hint'));
+  renderDashboard();
   guard(async () => { await refresh(); $('key').value = ''; $('message').focus(); });
 });
 $('chat-form').addEventListener('submit', event => {

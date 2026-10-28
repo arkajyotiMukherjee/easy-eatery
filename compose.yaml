@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: easy_eatery
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD:?Set LOCAL_POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: easy_eatery
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - easy-eatery-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easy_eatery -d easy_eatery"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  easy-eatery-postgres:
