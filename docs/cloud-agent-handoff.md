@@ -151,3 +151,9 @@ Stop at a truthful readiness boundary:
 4. **Restaurant pilot:** approved restaurant/menu/operations, correct selected POS kitchen routing, authorized sender and settlement, privacy/recovery/staging ownership and sign-off. Externally gated. Both-provider support requires distinct Toteat and Fudo acceptance evidence.
 
 If a cloud run cannot satisfy the next external gate, finish all independent scoped work, leave safe runnable defaults, and provide a concise blocker matrix. Do not repeat blocked account setup or mislabel the whole pilot complete.
+
+## 30 October 2026: original source import and local loyalty request
+
+The founder supplied the complete original specification archive and matching standalone README. All 19 archived Markdown documents, the original manifest and separate README are preserved under [the source index](sources/original-platform-specs/INDEX.md), with byte-level checksums and provenance. Read current adaptations there before implementing historical framework proposals. Preserve the current Fastify/Node 24/native browser stack.
+
+The founder now requests a local loyalty demo: source MVP-A staff ledger first, with unfinished MVP-B Google Wallet and MVP-C POS integrations explicitly simulated. The source import itself adds no loyalty implementation or new acceptance evidence. Start the loyalty demo only after the separate tested code handoff; keep it loopback-only and use synthetic data. Do not publish externally or infer real-provider approval.

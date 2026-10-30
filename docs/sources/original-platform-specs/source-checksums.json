@@ -1,0 +1,86 @@
+{
+  "README(1).md": {
+    "bytes": 6930,
+    "sha256": "bf411626f1bd37d0e73298ab4fb2687ad177b2fde6d62a6334f074e0277dcdf9"
+  },
+  "restaurant-platform-specs/00-product-direction-and-milestones.md": {
+    "bytes": 9485,
+    "sha256": "64fd7515b39572fedac02217427a2a189f70e24985bf34f52cd09d73bfd34897"
+  },
+  "restaurant-platform-specs/01-platform-architecture.md": {
+    "bytes": 9059,
+    "sha256": "e60407c77617d8e4decca2b4cbba0a35307526d3c5d1051463f7f0b005cafb62"
+  },
+  "restaurant-platform-specs/02-admin-dashboard-and-ux.md": {
+    "bytes": 7689,
+    "sha256": "4a6cd88439aeaa938e219556d5981ec564afa31e7d3414ccb2e79257c55acd95"
+  },
+  "restaurant-platform-specs/03-design-system-and-frontend.md": {
+    "bytes": 4281,
+    "sha256": "d91063463d5c699c7fc71af0c7029d0242da36a824553656e43ba6cda3a5a610"
+  },
+  "restaurant-platform-specs/04-module-qr-menu.md": {
+    "bytes": 4107,
+    "sha256": "89bf93e8c1951dac89556fd56ebb77c5bee319a912aceb0907026d0cff83ec28"
+  },
+  "restaurant-platform-specs/05-module-pickup-ordering.md": {
+    "bytes": 6385,
+    "sha256": "b286d5cefe5fb091b091c68575d71583fe2e204bbed5717b0c2b5d880c273649"
+  },
+  "restaurant-platform-specs/06-module-loyalty-and-pos.md": {
+    "bytes": 7219,
+    "sha256": "ca93c66ab370ded431e6a5f2e9ceea847f85b7d97362d2e1bc59107ee559e990"
+  },
+  "restaurant-platform-specs/07-module-crm.md": {
+    "bytes": 5779,
+    "sha256": "3c415fce62d7cbc7bc930737553139d69d50740c4dc7237c745522e0ce62c64b"
+  },
+  "restaurant-platform-specs/08-module-whatsapp.md": {
+    "bytes": 6174,
+    "sha256": "55b248860fd4b47a1817f793fd59feb1ecfd6f3b1726fe6c707901e38f304dd3"
+  },
+  "restaurant-platform-specs/09-module-catering.md": {
+    "bytes": 4796,
+    "sha256": "94fd2e9c5942e3cbd51e908bab937faefcad90e72afd3c424a0912a8262f83b1"
+  },
+  "restaurant-platform-specs/10-chile-integrations-pos.md": {
+    "bytes": 11368,
+    "sha256": "61cc32e5b730b013bd29d3c5d2ed927080a3ad1b629a232126f7f1337658cf2f"
+  },
+  "restaurant-platform-specs/11-chile-payments.md": {
+    "bytes": 7434,
+    "sha256": "3240562a6c2bb923d2e409a2abd9d5ead98d7c8c9778d7d98f663a6ca59fd616"
+  },
+  "restaurant-platform-specs/12-security-privacy-chile.md": {
+    "bytes": 5225,
+    "sha256": "07fe86fcd6c819d2c6e2b26367645d58caa2fc114bd0efd98864a1706e06c530"
+  },
+  "restaurant-platform-specs/13-deployment-and-operations.md": {
+    "bytes": 5506,
+    "sha256": "8b2ccaba4c12829c07760eb8c1a7594584f6c351515215f4acb99921d18c9ee8"
+  },
+  "restaurant-platform-specs/14-billing-entitlements.md": {
+    "bytes": 5306,
+    "sha256": "8d2013bd3adfb3fdfdcc396dd3c60c5d10a0da6ddac3f6327cda1c9ee60b3996"
+  },
+  "restaurant-platform-specs/15-prebuild-customer-validation.md": {
+    "bytes": 5049,
+    "sha256": "0fb20f69335076543f66f07d4ffc6f027ed74b1404627f8010e2e4fcead19482"
+  },
+  "restaurant-platform-specs/16-shared-domain-and-event-contracts.md": {
+    "bytes": 4789,
+    "sha256": "bb105a93f9865eab0742a1d3e98d0b72c240b9cf917c7d44da1cd7c971eb4998"
+  },
+  "restaurant-platform-specs/17-testing-and-acceptance.md": {
+    "bytes": 3866,
+    "sha256": "46ab23f0e6250ab8ccc2826faee25d5a8378acd1f85ae46a4e366c960e068806"
+  },
+  "restaurant-platform-specs/FILE_MANIFEST.txt": {
+    "bytes": 521,
+    "sha256": "4a7cc8f687a97b3f17d37adf9aca4a47cff3abfcd93228948873ff44b740dd9f"
+  },
+  "restaurant-platform-specs/README.md": {
+    "bytes": 6930,
+    "sha256": "bf411626f1bd37d0e73298ab4fb2687ad177b2fde6d62a6334f074e0277dcdf9"
+  }
+}

@@ -108,6 +108,8 @@ The deployment baseline is a TypeScript modular monolith, PostgreSQL, Cloud Run 
 
 ## Read next
 
+- [Original platform specifications, provenance and current adaptations](docs/sources/original-platform-specs/INDEX.md)
+
 - [Product scope and milestones](docs/product-and-milestones.md)
 - [Architecture and deployment](docs/architecture.md)
 - [Provider research and test-account setup](docs/integrations.md)
