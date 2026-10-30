@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { WhatsAppNotifications, WhatsAppSupport } from './whatsapp-support.ts';
 import type { Identity, PostgresRepository } from './database.ts';
-import { WhatsAppDeliveryError, type Inbound } from '../integrations/whatsapp.ts';
+import { customerWindowOpen, WhatsAppDeliveryError, type Inbound } from '../integrations/whatsapp.ts';
 import type { WhatsAppTransport } from '../integrations/contracts.ts';
 import { Conversation } from '../modules/whatsapp/conversation.ts';
 import { OrderingService } from '../platform/ordering.ts';
@@ -11,13 +12,17 @@ import { DemoPaymentProvider, DemoPosProvider } from '../integrations/contracts.
 export class WhatsAppQueue {
   private running?: Promise<void>;
   private timer?: ReturnType<typeof setInterval>;
-  constructor(readonly repository: PostgresRepository, readonly transport: WhatsAppTransport, readonly phoneId: string) {}
+  readonly support = new WhatsAppSupport();
+  readonly notifications: WhatsAppNotifications;
+  constructor(readonly repository: PostgresRepository, readonly transport: WhatsAppTransport, readonly phoneId: string) {
+    this.notifications = new WhatsAppNotifications(repository, transport, phoneId);
+  }
 
   async enqueue(identity: Identity, messages: Inbound[]) {
     await this.repository.transaction(identity, 'whatsapp.enqueue', async (_state, client) => {
-      for (const message of messages) await client.query(`INSERT INTO whatsapp_jobs(tenant_id,branch_id,phone_id,message_id,sender,message_text)
-        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(tenant_id,branch_id,phone_id,message_id) DO NOTHING`,
-      [identity.tenantId, identity.branchId, this.phoneId, message.id, message.from, message.text]);
+      for (const message of messages) await client.query(`INSERT INTO whatsapp_jobs(tenant_id,branch_id,phone_id,message_id,sender,message_text,provider_timestamp)
+        VALUES($1,$2,$3,$4,$5,$6,to_timestamp($7)) ON CONFLICT(tenant_id,branch_id,phone_id,message_id) DO NOTHING`,
+      [identity.tenantId, identity.branchId, this.phoneId, message.id, message.from, message.text, message.timestamp ?? null]);
     });
   }
 
@@ -29,7 +34,7 @@ export class WhatsAppQueue {
       const found = await client.query(`SELECT j.* FROM whatsapp_jobs j WHERE j.tenant_id=$1 AND j.branch_id=$2 AND j.phone_id=$3
         AND j.state='pending' AND j.available_at<=now() AND NOT EXISTS (
           SELECT 1 FROM whatsapp_jobs earlier WHERE earlier.tenant_id=j.tenant_id AND earlier.branch_id=j.branch_id
-          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state<>'sent'
+          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state NOT IN ('sent','resolved')
         ) ORDER BY j.id LIMIT 1 FOR UPDATE`, [identity.tenantId, identity.branchId, this.phoneId]);
       const job = found.rows[0];
       if (!job) return false;
@@ -38,7 +43,8 @@ export class WhatsAppQueue {
         await client.query("UPDATE whatsapp_jobs SET state='sent',completed_at=now() WHERE id=$1 AND tenant_id=$2 AND branch_id=$3", [job.id, identity.tenantId, identity.branchId]);
         return true;
       }
-      const response = await new Conversation(new OrderingService(state, new DemoPaymentProvider(), new DemoPosProvider())).receive(job.sender, job.message_id, job.message_text);
+      const response = (await this.support.intercept(state, client, identity, this.phoneId, job)) ?? await new Conversation(new OrderingService(state, new DemoPaymentProvider(), new DemoPosProvider())).receive(job.sender, job.message_id, job.message_text);
+      await this.support.bindOrder(state, client, identity, this.phoneId, job);
       await client.query("UPDATE whatsapp_jobs SET response=$2,state='reply_pending',attempts=0,error_code=NULL WHERE id=$1 AND tenant_id=$3 AND branch_id=$4", [job.id, response, identity.tenantId, identity.branchId]);
       return true;
     }); } catch (error) {
@@ -59,14 +65,23 @@ export class WhatsAppQueue {
       const found = await client.query(`SELECT j.* FROM whatsapp_jobs j WHERE j.tenant_id=$1 AND j.branch_id=$2 AND j.phone_id=$3
         AND j.state='reply_pending' AND j.available_at<=now() AND NOT EXISTS (
           SELECT 1 FROM whatsapp_jobs earlier WHERE earlier.tenant_id=j.tenant_id AND earlier.branch_id=j.branch_id
-          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state<>'sent'
+          AND earlier.phone_id=j.phone_id AND earlier.sender=j.sender AND earlier.id<j.id AND earlier.state NOT IN ('sent','resolved')
         ) ORDER BY j.id LIMIT 1 FOR UPDATE`, [identity.tenantId, identity.branchId, this.phoneId]);
       const row = found.rows[0];
       if (!row) return undefined;
+      if (!customerWindowOpen(row.provider_timestamp ? new Date(row.provider_timestamp).getTime() / 1000 : undefined)) {
+        await client.query("UPDATE whatsapp_jobs SET state='needs_attention',error_code='customer_window_closed' WHERE id=$1 AND tenant_id=$2 AND branch_id=$3", [row.id, identity.tenantId, identity.branchId]);
+        return { ...row, blocked: true };
+      }
       await client.query("UPDATE whatsapp_jobs SET state='sending',claim_id=$2,lease_until=now()+interval '60 seconds',attempts=attempts+1 WHERE id=$1 AND tenant_id=$3 AND branch_id=$4", [row.id, claim, identity.tenantId, identity.branchId]);
       return row;
     });
     if (!job) return false;
+    if (job.blocked) return true;
+    if (!customerWindowOpen(new Date(job.provider_timestamp).getTime() / 1000)) {
+      await this.repository.pool.query("UPDATE whatsapp_jobs SET state='needs_attention',error_code='customer_window_closed',lease_until=NULL WHERE id=$1 AND claim_id=$2 AND state='sending'", [job.id, claim]);
+      return true;
+    }
     let receipt: void | { id: string };
     try { receipt = await this.transport.sendText(job.sender, job.response); }
     catch (error) {
@@ -99,12 +114,13 @@ export class WhatsAppQueue {
     const work = await this.repository.pool.query(`SELECT 1 FROM whatsapp_jobs WHERE tenant_id=$1 AND branch_id=$2 AND phone_id=$3
       AND ((state IN ('pending','reply_pending') AND available_at<=now()) OR (state='sending' AND lease_until<now())) LIMIT 1`,
     [identity.tenantId, identity.branchId, this.phoneId]);
-    if (!work.rowCount) return;
-    for (let count = 0; count < 20; count++) {
+    if (work.rowCount) for (let count = 0; count < 20; count++) {
       const processed = await this.processOne(identity);
       const sent = await this.sendOne(identity);
       if (!processed && !sent) break;
     }
+    await this.notifications.stage(identity);
+    for (let count = 0; count < 20; count++) if (!(await this.notifications.sendOne(identity))) break;
   }
   start() {
     if (this.timer) return;

@@ -32,11 +32,12 @@
     {
       "id": "checkout",
       "title": "Blocker: Webpay sandbox creation received security-page HTTP 403; no successful hosted checkout yet",
-      "detail": "Independent sandbox checkout is authorized as demo scope. Published integration credentials exist in the official example. Implement server-priced attempts, POST handoff and authoritative commit/status with mocks now; real sandbox success and production merchant settlement are distinct gates. No security bypass or simulated approval presented as real.",
+      "detail": "Opt-in PostgreSQL sandbox checkout now has durable immutable attempts, POST handoff, authoritative commit/status, one local ticket, separate test totals and owner-only full reversal claims. Unknown/partial outcomes require review and never silently switch to cash. Local fixtures/browser checks pass; the actual integration host is proxy-denied and hosted success/production settlement remain unverified.",
       "source": "docs/cloud-agent-handoff.md",
       "code_paths": [
-        "apps/server/src/platform/ordering.ts",
-        "apps/server/src/integrations/contracts.ts"
+        "apps/server/src/persistence/sandbox-payments.ts",
+        "apps/server/src/sandbox-routes.ts",
+        "apps/server/src/integrations/webpay.ts"
       ]
     },
     {
@@ -52,17 +53,36 @@
     {
       "id": "delivery",
       "title": "Implemented: durable WhatsApp jobs; uncertain sends pause for review, not blind replay",
-      "detail": "Merged PR29 supplies persisted ACK, atomic domain/reply work, per-conversation sequencing and bounded explicit-rejection retries. Provider acceptance is not device delivery. Status callbacks, retention and staff recovery remain open in issue10.",
+      "detail": "Durable ACK/queue, versioned staff recovery, independent signed device-status evidence, verified 24-hour windows, state-derived pickup notifications and redacted human handoff have local PostgreSQL/fake-transport coverage. Unknown sends never replay; missing/future/expired timestamps fail closed. Real recipient/device acceptance, approved template fallback and retention policy remain gates.",
       "source": "docs/cloud-agent-handoff.md",
       "code_paths": [
         "apps/server/src/persistence/whatsapp-queue.ts",
-        "apps/server/src/persistence/database.ts"
+        "apps/server/src/persistence/whatsapp-status.ts",
+        "apps/server/src/persistence/whatsapp-support.ts"
       ]
     },
     {
       "id": "orchestration",
       "title": "Authorization: cloud orchestrator may spawn bounded specialist subagents and finish independent pilot work",
-      "detail": "Use isolated branches/worktrees, centrally reserve migrations/shared contracts and integrate meaningful tests. Do not contact vendors, approve legal terms, activate billing, migrate live senders or claim blocked acceptance complete. Update this context layer and GitHub evidence after each slice.",
+      "detail": "Use bounded specialists with exclusive shared-file ownership in the existing isolated cloud checkout. Do not create worktrees unless explicitly requested. Centrally reserve migrations/shared contracts and integrate meaningful tests. Do not contact vendors, approve legal terms, activate billing or claim blocked acceptance complete. Update portable context and truthful issue evidence after delivery slices.",
+      "source": "docs/cloud-agent-handoff.md",
+      "code_paths": []
+    },
+    {
+      "id": "cloud-evidence",
+      "title": "Evidence: local sandbox authority, permitted messaging, browser/image and disposable restore checks",
+      "detail": "28 application tests and 43 PostgreSQL TAP results pass; Chromium ES/EN role/mobile and fake-gateway sandbox handoff/reversal pass; final nonroot Docker HTTP journey and disposable backup/restore pass. No real provider acceptance claimed. GitHub API updates blocked, pending evidence retained locally.",
+      "source": "docs/cloud-agent-handoff.md",
+      "code_paths": [
+        "apps/server/src/persistence/whatsapp-recovery.ts",
+        "apps/server/src/integrations/webpay.ts",
+        "scripts/rehearse-demo.ts"
+      ]
+    },
+    {
+      "id": "main-integration",
+      "title": "Evidence: pilot changes integrated into main by authorized normal fast-forward",
+      "detail": "On29October remote main was verified at79e6483 after fresh28 application tests,43 PostgreSQL TAP results, type/browser syntax and context checks passed. Issue12 implementation is ready for local closure;5/6 already closed. Real-device acceptance remains9/27; other issue criteria and all milestones remain incomplete. No cloud API issue/milestone write occurred.",
       "source": "docs/cloud-agent-handoff.md",
       "code_paths": []
     },

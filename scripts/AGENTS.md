@@ -7,3 +7,7 @@ Run through root package scripts so tsx and env-file handling match the server. 
 Read `docs/postgres-storage.md` and `docs/catalog-and-availability.md`. Validate with `npm run check`; database script changes need disposable-database integration coverage. Do not run seed, issue/revoke tokens or import catalogs merely to inspect behavior.
 
 `update-context.py` is an offline context maintenance tool. Refresh with the pinned Graphify environment; `--check` needs only Python standard library and validates graph integrity plus source/artifact hashes. It must not run migrations, issue tokens or call providers.
+
+`rehearse-demo.ts` starts and stops isolated loopback memory-mode servers through the real entrypoint. Run `node --import tsx scripts/rehearse-demo.ts` for Spanish/English local pickup and both simulated POS labels, HTTP/auth/replay/state/metrics checks. It accepts no target URL, overrides persistence/transport for its own child processes, uses ephemeral credentials without printing them, and never contacts providers or an existing database. See `docs/operations-rehearsal.md` for separate browser, PostgreSQL, packaging, privacy and staging gates.
+
+`database.ts sandbox-mode` explicitly selects a development branch for Webpay integration/local fulfillment, disables pay at pickup for new orders and leaves confirmed snapshots unchanged. See `docs/webpay-sandbox.md`.

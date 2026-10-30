@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { errors, type ErrorCode, type Locale } from './i18n.ts';
 import { cartSelection, withinHours, type Availability, type CatalogMeta, type Modifier, type ProviderMappings } from './catalog.ts';
 
-export type PaymentState = 'due' | 'simulated_paid' | 'store_paid';
+export type PaymentState = 'due' | 'simulated_paid' | 'store_paid' | 'sandbox_authorized' | 'sandbox_reversed' | 'sandbox_review';
 export type OrderStatus = 'awaiting_payment' | 'paid' | 'preparing' | 'ready' | 'collected';
 export type Product = { id: string; name: string; nameEn: string; price: number; available: boolean; mappings?: ProviderMappings; modifiers?: Modifier[] };
 export type Line = { productId: string; name: string; nameEn: string; unitPrice: number; quantity: number; providerProductId?: string; modifiers?: { id: string; name: string; nameEn: string; price: number; providerId?: string }[] };
@@ -10,7 +10,7 @@ export type Quote = { catalogVersion: number; expiresAt: number; cartKey: string
 export type Order = {
   id: string; tenantId: string; branchId: string; customerId: string; source: 'whatsapp';
   currency: 'CLP'; lines: Line[]; total: number; status: OrderStatus;
-  paymentMethod?: 'simulation' | 'pay_at_pickup'; paymentState?: PaymentState; fulfillment?: 'simulation' | 'local';
+  paymentMethod?: 'simulation' | 'pay_at_pickup' | 'webpay_sandbox'; paymentState?: PaymentState; fulfillment?: 'simulation' | 'local';
   createdAt: string; paymentReference?: string; posReference?: string; posProvider: 'toteat' | 'fudo'; catalogVersion?: number;
 };
 export type Session = { cart: Map<string, number>; orderId?: string; expiresAt: number; locale: Locale; quote?: Quote };
@@ -19,6 +19,7 @@ export type Tenant = {
   modules: { whatsappOrdering: boolean; qrMenu: boolean };
   posProvider: 'toteat' | 'fudo';
   payAtPickup?: boolean;
+  sandboxCheckout?: boolean;
 };
 
 export const demoTenant: Tenant = {
@@ -69,7 +70,7 @@ export class MemoryStore {
         return { id: modifier.id, name: modifier.name, nameEn: modifier.nameEn, price: modifier.price, ...(modifier.mappings?.[this.tenant.posProvider] ? { providerId: modifier.mappings[this.tenant.posProvider] } : {}) };
       });
       const providerProductId = product.mappings?.[this.tenant.posProvider];
-      if (!this.tenant.payAtPickup && this.catalog.source === 'manual' && (!providerProductId || modifiers.some(m => !m.providerId))) throw new DomainError('mapping_missing');
+      if (!this.tenant.payAtPickup && !this.tenant.sandboxCheckout && this.catalog.source === 'manual' && (!providerProductId || modifiers.some(m => !m.providerId))) throw new DomainError('mapping_missing');
       return {
         productId, name: [product.name, ...modifiers.map(m => m.name)].join(' + '), nameEn: [product.nameEn, ...modifiers.map(m => m.nameEn)].join(' + '),
         unitPrice: product.price + modifiers.reduce((sum, m) => sum + m.price, 0), quantity,
@@ -99,7 +100,7 @@ export class MemoryStore {
     const order: Order = {
       id: randomUUID(), tenantId: this.tenant.id, branchId: this.tenant.branchId, customerId, source: 'whatsapp',
       currency: 'CLP', lines, total: lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0),
-      paymentMethod: this.tenant.payAtPickup ? 'pay_at_pickup' : 'simulation', paymentState: 'due', fulfillment: this.tenant.payAtPickup ? 'local' : 'simulation',
+      paymentMethod: this.tenant.sandboxCheckout ? 'webpay_sandbox' : this.tenant.payAtPickup ? 'pay_at_pickup' : 'simulation', paymentState: 'due', fulfillment: this.tenant.payAtPickup || this.tenant.sandboxCheckout ? 'local' : 'simulation',
       status: 'awaiting_payment', createdAt: new Date(this.now()).toISOString(), posProvider: this.tenant.posProvider, catalogVersion: this.catalog.version,
     };
     this.orders.set(order.id, order);

@@ -10,7 +10,7 @@ export class Conversation {
   menu(locale: Locale = 'es') {
     const name = this.ordering.store.tenant.name;
     const greeting = locale === 'es' ? `¡Hola! Bienvenido a ${name}. Retiro en el local.` : `Hi! Welcome to ${name}. Pickup at the restaurant.`;
-    const disclaimer = this.ordering.store.tenant.payAtPickup ? (locale === 'en' ? 'Pay at pickup. Staff will accept your order in Easy Eatery.' : 'Paga en el local. El personal aceptará tu pedido en Easy Eatery.') : (locale === 'en' ? 'Payment and kitchen are simulated.' : 'Pago y cocina simulados.');
+    const disclaimer = this.ordering.store.tenant.sandboxCheckout ? (locale === 'en' ? 'Webpay sandbox test only; no real charge. Staff provides a test checkout link; local kitchen.' : 'Solo prueba Webpay sandbox; sin cobro real. El personal entrega el enlace de prueba; cocina local.') : this.ordering.store.tenant.payAtPickup ? (locale === 'en' ? 'Pay at pickup. Staff will accept your order in Easy Eatery.' : 'Paga en el local. El personal aceptará tu pedido en Easy Eatery.') : (locale === 'en' ? 'Payment and kitchen are simulated.' : 'Pago y cocina simulados.');
     return greeting + '\n\n' + this.ordering.store.products.filter(p => p.available)
       .map(p => `${p.id}. ${this.name(p, locale)} — ${money(p.price, locale)}` + (p.modifiers?.filter(m => m.available).map(m => `\n  +${m.id}: ${locale === 'en' ? m.nameEn : m.name} (${money(m.price, locale)})`).join('') ?? '')).join('\n') + '\n\n' +
       (locale === 'es' ? `Escribe el número y cantidad, por ejemplo: 1 x 2.\nPara extras: 1+queso x 2 (usa el código del menú).\nEscribe carrito, quitar 1, vaciar o confirmar.\nPrecios finales en CLP. ${disclaimer}\nFor English, type English.` :
@@ -70,6 +70,9 @@ export class Conversation {
     if (text === 'confirmar') {
       const order = await this.ordering.confirm(customerId);
       const pickupStatus = ({ awaiting_payment: pick('esperando aceptación', 'awaiting staff acceptance'), paid: pick('pago recibido', 'payment received'), preparing: pick('en preparación', 'preparing'), ready: pick('listo para retirar', 'ready for pickup'), collected: pick('retirado', 'collected') })[order.status];
+      if (order.paymentMethod === 'webpay_sandbox') return pick(
+        `Pedido de prueba ${order.id.slice(0, 8)} confirmado. Total CLP: ${money(order.total, locale)}. Webpay sandbox: ${order.paymentState === 'sandbox_authorized' ? 'autorización de prueba confirmada' : order.paymentState === 'sandbox_reversed' ? 'reversado; solicita ayuda al personal' : 'pendiente; solicita el enlace de prueba al personal'}. No se recibió dinero real. Cocina local: ${order.status === 'awaiting_payment' ? 'esperando autorización de prueba' : pickupStatus}.`,
+        `Test order ${order.id.slice(0, 8)} confirmed. CLP total: ${money(order.total, locale)}. Webpay sandbox: ${order.paymentState === 'sandbox_authorized' ? 'test authorization confirmed' : order.paymentState === 'sandbox_reversed' ? 'reversed; ask staff for help' : 'pending; ask staff for the test checkout link'}. No real money received. Local kitchen: ${order.status === 'awaiting_payment' ? 'awaiting test authorization' : pickupStatus}.`);
       if (order.paymentMethod === 'pay_at_pickup') return pick(
         `Pedido ${order.id.slice(0, 8)} confirmado. Total: ${money(order.total, locale)}. Paga en el local. Estado: ${pickupStatus}. Pago: ${order.paymentState === 'store_paid' ? 'registrado' : 'pendiente'}.`,
         `Order ${order.id.slice(0, 8)} confirmed. Total: ${money(order.total, locale)}. Pay at pickup. Status: ${pickupStatus}. Payment: ${order.paymentState === 'store_paid' ? 'recorded' : 'due'}.`);

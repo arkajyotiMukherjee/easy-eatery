@@ -1,5 +1,7 @@
 # Architecture and deployment
 
+Cloud implementation update: optional [staff-assisted Webpay sandbox](webpay-sandbox.md) and [durable staff handoff/notifications](whatsapp-support.md) now have local fixture coverage. Default payment/POS adapters remain simulated; actual sandbox, real-phone, restaurant/vendor and production-hosting acceptance remain unverified. Historical scaffold descriptions below are not acceptance evidence.
+
 ## Runtime boundaries
 
 Use one TypeScript modular monolith for a two-person team. The current server is Fastify on Node 24. Shared domain services own business decisions; transport handlers translate payloads. Both Toteat and Fudo are first-pilot adapters, configured separately per restaurant/branch, with the selected provider snapshotted on each order. A provider API does not define the application's domain model.

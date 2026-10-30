@@ -255,7 +255,9 @@
         "Enforce the applicable customer-service window; use an approved utility template outside it or route to staff.",
         "Test failed delivery, late readiness, and no marketing messages or sensitive payment data in chat."
       ],
-      "doc": "docs/demo-and-pilot.md"
+      "doc": "docs/demo-and-pilot.md",
+      "implementation_status": "complete_ready_for_local_closure",
+      "closure_evidence": "docs/completed-issues.md"
     },
     {
       "id": "P13",
@@ -514,5 +516,40 @@
       "completedImplementationBy": "https://github.com/arkajyotiMukherjee/easy-eatery/pull/28"
     }
   ],
-  "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations."
+  "scopeUpdate": "2026-10-28: first prospect demo uses local kitchen fulfillment, pay at pickup and independently verified Webpay sandbox; no restaurant POS account required. Both Toteat and Fudo remain subsequent restaurant-pilot integrations.",
+  "cloud_delivery_evidence": {
+    "date": "2026-10-28",
+    "github_update_status": "blocked_api_proxy_forbidden",
+    "pending_updates": "docs/issue-evidence.md",
+    "implemented_slices": [
+      "P10/P12: scoped recovery, signed status evidence, verified reply/notification windows and redacted human handoff; real-phone acceptance and retention remain open",
+      "P14/P15/P17/P24: opt-in durable sandbox checkout/local ticket/status/full test reversal, fixture and browser evidence; real hosted success and merchant settlement remain open",
+      "P13/P22/P23: factual provider access matrix and synthetic port tests; no vendor contracts or kitchen acceptance claimed",
+      "P18/P20/P21: bilingual staff controls, HTTP/browser/image/isolated restore evidence and operations runbook; restaurant feedback, retention policy and paid staging remain gated"
+    ],
+    "validation": {
+      "application_tests": 28,
+      "postgres_tap_results": 43,
+      "http_rehearsal_modes": 3,
+      "chromium": "ES/EN owner/operator/viewer desktop/mobile; fake sandbox POST/reversal",
+      "packaging": "nonroot image HTTP lifecycle passed",
+      "restore": "disposable PostgreSQL only"
+    },
+    "branch": "codex/pilot-readiness",
+    "implementation_commits": [
+      "985e7de",
+      "65167d5"
+    ],
+    "pull_request_status": "not_created; changes integrated via owner-authorized normal Git fast-forward",
+    "main_integration": {
+      "date": "2026-10-29",
+      "method": "normal_git_fast_forward",
+      "implementation_tip": "79e648352d7c19cd698498eb2a453c30354eb3e7",
+      "github_actions_status": "not_observable_from_cloud_api"
+    },
+    "ready_to_close_issues": [
+      12
+    ],
+    "completed_milestones": []
+  }
 }

@@ -5,13 +5,18 @@ import { DomainError, MemoryStore, type OrderStatus } from './platform/domain.ts
 import { OrderingService } from './platform/ordering.ts';
 import { Conversation } from './modules/whatsapp/conversation.ts';
 import { DemoPaymentProvider, DemoPosProvider, type WhatsAppTransport } from './integrations/contracts.ts';
-import { parseMessages, validSignature } from './integrations/whatsapp.ts';
+import { customerWindowOpen, parseDeliveryStatuses, parseMessages, validSignature } from './integrations/whatsapp.ts';
 import { errors, localeFrom, type Locale } from './platform/i18n.ts';
 import { AccessError, type Identity, type PostgresRepository } from './persistence/database.ts';
 import { WhatsAppQueue } from './persistence/whatsapp-queue.ts';
+import { WhatsAppStatuses } from './persistence/whatsapp-status.ts';
+import { WhatsAppRecovery } from './persistence/whatsapp-recovery.ts';
 import { CatalogService } from './platform/catalog.ts';
+import type { SandboxPayments } from './persistence/sandbox-payments.ts';
+import { registerSandboxRoutes } from './sandbox-routes.ts';
+import { registerWhatsAppSupportRoutes } from './persistence/whatsapp-support.ts';
 
-export type Config = { payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
+export type Config = { sandboxPayments?: SandboxPayments; payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
 
 export function createApp(config: Config, store = new MemoryStore()) {
   if (!config.repository && (!config.adminToken || config.adminToken.length < 16)) throw new Error('ADMIN_TOKEN must contain at least 16 characters.');
@@ -35,7 +40,7 @@ export function createApp(config: Config, store = new MemoryStore()) {
     }
     return work(services(store));
   }
-  // Test-account demo only. Durable queue, retry policy and distributed locks are M2.
+  // Memory-mode test callbacks serialize locally; PostgreSQL uses the durable queue.
   let webhookQueue = Promise.resolve();
   app.removeContentTypeParser('application/json');
   app.addContentTypeParser('application/json', { parseAs: 'string' }, (request, body, done) => {
@@ -67,8 +72,10 @@ export function createApp(config: Config, store = new MemoryStore()) {
     const locale = localeFrom(request.headers['accept-language']);
     reply.code(status).send({ error: error instanceof DomainError ? errors[locale][error.code] : errors[locale][status === 401 ? 'unauthorized' : status === 403 ? 'forbidden' : status >= 500 ? 'internal' : 'invalid_request'] });
   });
+  registerSandboxRoutes(app, config.sandboxPayments, request => identities.get(request));
+  registerWhatsAppSupportRoutes(app, config.repository, request => identities.get(request));
 
-  const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/catalog-ui.js', ['catalog-ui.js', 'text/javascript']], ['/i18n.js', ['i18n.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
+  const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/sandbox-ui.js', ['sandbox-ui.js', 'text/javascript']], ['/catalog-ui.js', ['catalog-ui.js', 'text/javascript']], ['/i18n.js', ['i18n.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
   for (const [route, [file, type]] of assets) {
     app.get(route, async (_request, reply) => reply.type(type).send(await readFile(new URL(`../public/${file}`, import.meta.url), 'utf8')));
   }
@@ -126,6 +133,7 @@ export function createApp(config: Config, store = new MemoryStore()) {
     const identity = config.repository ? await config.repository.channelIdentity(config.phoneId) : undefined;
     if (config.repository && !identity) return reply.code(403).send({ error: 'Unmapped receiving account' });
     if (queue && identity) {
+      await new WhatsAppStatuses(config.repository!, config.phoneId!).record(identity, parseDeliveryStatuses(request.body, config.phoneId!));
       await queue.enqueue(identity, messages);
       return { received: true, queued: true };
     }
@@ -135,12 +143,13 @@ export function createApp(config: Config, store = new MemoryStore()) {
       }
     });
     webhookQueue = run.catch(() => {});
-    // Synchronous delivery is intentional for this scaffold: failed sends receive 5xx,
-    // allowing Meta retry. M2 must acknowledge a durable inbox before processing.
+    // Memory mode remains a synchronous test scaffold. PostgreSQL returns only
+    // after durable enqueue above; unknown outcomes are never blindly resent there.
     await run;
     return { received: true };
   });
-  async function deliverMessage(identity: Identity | undefined, message: { from: string; id: string; text: string }) {
+  async function deliverMessage(identity: Identity | undefined, message: { from: string; id: string; text: string; timestamp?: number }) {
+    if (!customerWindowOpen(message.timestamp)) return;
     const result = await run(identity, 'whatsapp.receive', async ({ state, chat }) => {
       const key = `${state.tenant.id}:${message.from}:${message.id}`;
       if (state.delivered.has(key)) return { key, response: undefined };
@@ -159,6 +168,35 @@ export function createApp(config: Config, store = new MemoryStore()) {
       const result = await client.query('SELECT state,count(*)::integer AS count FROM whatsapp_jobs WHERE tenant_id=$1 AND branch_id=$2 GROUP BY state', [identity.tenantId,identity.branchId]);
       return { mode: 'durable', counts: result.rows };
     });
+  });
+  app.get('/api/whatsapp/delivery/receipts', async request => {
+    if (!config.repository) return { receipts: [], limit: 100 };
+    return new WhatsAppStatuses(config.repository, config.phoneId ?? '').list(identities.get(request)!);
+  });
+  const recovery = config.repository ? new WhatsAppRecovery(config.repository) : undefined;
+  app.get('/api/whatsapp/delivery/jobs', async request => {
+    if (!recovery) return { jobs: [], limit: 100 };
+    return recovery.list(identities.get(request)!);
+  });
+  app.post<{ Params: { id: string }; Body: { expectedState: string; expectedVersion: number } }>('/api/whatsapp/delivery/jobs/:id/retry', {
+    schema: {
+      params: { type: 'object', additionalProperties: false, required: ['id'], properties: { id: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } } },
+      body: { type: 'object', additionalProperties: false, required: ['expectedState','expectedVersion'], properties: { expectedState: { const: 'failed' }, expectedVersion: { type: 'integer', minimum: 0, maximum: 2147483646 } } },
+    },
+  }, async request => {
+    if (!recovery) throw Object.assign(new Error('Durable mode required.'), { statusCode: 409 });
+    return recovery.retry(identities.get(request)!, request.params.id, request.body.expectedVersion);
+  });
+  app.post<{ Params: { id: string }; Body: { expectedState: string; expectedVersion: number; confirmation: string } }>('/api/whatsapp/delivery/jobs/:id/resolve', {
+    schema: {
+      params: { type: 'object', additionalProperties: false, required: ['id'], properties: { id: { type: 'string', pattern: '^[1-9][0-9]{0,17}$' } } },
+      body: { type: 'object', additionalProperties: false, required: ['expectedState','expectedVersion','confirmation'], properties: {
+        expectedState: { const: 'needs_attention' }, expectedVersion: { type: 'integer', minimum: 0, maximum: 2147483646 }, confirmation: { const: 'reviewed_without_resend' },
+      } },
+    },
+  }, async request => {
+    if (!recovery) throw Object.assign(new Error('Durable mode required.'), { statusCode: 409 });
+    return recovery.resolve(identities.get(request)!, request.params.id, request.body.expectedVersion);
   });
   app.addHook('onClose', async () => { await queue?.stop(); });
   return { app, store, ordering, conversation, queue };

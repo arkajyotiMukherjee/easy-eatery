@@ -35,7 +35,7 @@ test('pickup loop: no QR dependency, exact CLP total, payment before kitchen, co
     assert.equal((await app.inject({ method: 'POST', url: `/api/demo/orders/${order.id}/status`, headers, payload: { status } })).statusCode, 200);
   }
   const dashboard = (await app.inject({ url: '/api/dashboard', headers })).json();
-  assert.deepEqual(dashboard.metrics, { orders: 1, paidOrders: 1, collected: 1, paidRevenue: 11500, storePaidRevenue: 0, dueRevenue: 0 });
+  assert.deepEqual(dashboard.metrics, { orders: 1, paidOrders: 1, collected: 1, paidRevenue: 11500, storePaidRevenue: 0, testAuthorizedRevenue: 0, dueRevenue: 0 });
   assert.equal(dashboard.orders[0].customerId, undefined);
 });
 
@@ -89,7 +89,7 @@ test('signed Cloud API webhook, mapped phone, replay and retry after outbound fa
   t.after(() => app.close());
   assert.equal((await app.inject('/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=verify&hub.challenge=42')).body, '42');
   assert.equal((await app.inject('/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=bad&hub.challenge=42')).statusCode, 403);
-  const body = JSON.stringify({ object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: '123' }, messages: [{ id: 'wamid.a', from: 'test-user', type: 'text', text: { body: '1 x 2' } }] } }] }] });
+  const body = JSON.stringify({ object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: '123' }, messages: [{ id: 'wamid.a', from: 'test-user', timestamp: String(Math.floor(Date.now() / 1000)), type: 'text', text: { body: '1 x 2' } }] } }] }] });
   const signature = 'sha256=' + createHmac('sha256', 'secret').update(body).digest('hex');
   const deliver = (signatureValue: string) => app.inject({ method: 'POST', url: '/webhooks/whatsapp', headers: { 'content-type': 'application/json', 'x-hub-signature-256': signatureValue }, payload: body });
   assert.equal((await deliver('bad')).statusCode, 401);
@@ -145,5 +145,19 @@ test('both selectable demo POS providers snapshot routing and keep the same orde
       assert.equal(order.posReference, `demo-kitchen-${provider}-${order.id}`);
       assert.equal(order.total, 3200);
     } finally { await app.close(); }
+  }
+});
+
+
+test('synchronous Cloud fixture never sends freeform outside a verified customer window', async t => {
+  let sends=0;
+  const {app}=createApp({adminToken:token,appSecret:'fixture-secret',phoneId:'123',transport:{sendText:async()=>{sends++;}}});
+  t.after(()=>app.close());
+  const now=Math.floor(Date.now()/1000);
+  for(const [i,timestamp] of [undefined,now-86401,now+86400,now].entries()) {
+    const payload=JSON.stringify({object:'whatsapp_business_account',entry:[{changes:[{field:'messages',value:{metadata:{phone_number_id:'123'},messages:[{id:`window-${i}`,from:'synthetic-window-contact',type:'text',text:{body:'hello'},...(timestamp===undefined?{}:{timestamp:String(timestamp)})}]}}]}]});
+    const signature='sha256='+createHmac('sha256','fixture-secret').update(payload).digest('hex');
+    assert.equal((await app.inject({method:'POST',url:'/webhooks/whatsapp',headers:{'content-type':'application/json','x-hub-signature-256':signature},payload})).statusCode,200);
+    assert.equal(sends,i===3?1:0);
   }
 });

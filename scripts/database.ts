@@ -18,9 +18,15 @@ try {
   } else if (command === 'pickup-mode') {
     const [tenantId, branchId, enabled] = process.argv.slice(3);
     if (!tenantId || !branchId || !['true', 'false'].includes(enabled)) throw new Error('Usage: scripts/database.ts pickup-mode <tenant> <branch> <true|false>');
-    const result = await pool.query('UPDATE branches SET pay_at_pickup=$3 WHERE tenant_id=$1 AND id=$2', [tenantId, branchId, enabled === 'true']);
+    const result = await pool.query('UPDATE branches SET pay_at_pickup=$3,sandbox_checkout=CASE WHEN $3 THEN false ELSE sandbox_checkout END WHERE tenant_id=$1 AND id=$2', [tenantId, branchId, enabled === 'true']);
     if (result.rowCount !== 1) throw new Error('Branch not found');
     console.log('Branch pickup mode updated; existing confirmed orders retain their payment and fulfillment method.');
+  } else if (command === 'sandbox-mode') {
+    const [tenantId, branchId, enabled] = process.argv.slice(3);
+    if (!tenantId || !branchId || !['true', 'false'].includes(enabled)) throw new Error('Usage: scripts/database.ts sandbox-mode <tenant> <branch> <true|false>');
+    const result = await pool.query('UPDATE branches SET sandbox_checkout=$3,pay_at_pickup=CASE WHEN $3 THEN false ELSE pay_at_pickup END WHERE tenant_id=$1 AND id=$2', [tenantId, branchId, enabled === 'true']);
+    if (result.rowCount !== 1) throw new Error('Branch not found');
+    console.log('Sandbox checkout mode updated; existing confirmed orders retain their payment and fulfillment method. No live payment or POS connector enabled.');
   } else if (command === 'staff') {
     const [tenantId, branchId, role, ...name] = process.argv.slice(3);
     if (!tenantId || !branchId || !['owner', 'operator', 'viewer'].includes(role) || !name.length) throw new Error('Usage: npm run db:staff -- <tenant> <branch> <owner|operator|viewer> <display name>');

@@ -31,7 +31,13 @@ export class CloudWhatsAppTransport implements WhatsAppTransport {
   }
 }
 
-export type Inbound = { id: string; from: string; text: string };
+export type Inbound = { id: string; from: string; text: string; timestamp?: number };
+
+// Reserve the transport timeout; receipt time and replay never open a window.
+export function customerWindowOpen(timestamp: number | undefined, now = Date.now()) {
+  return timestamp !== undefined && Number.isInteger(timestamp) && timestamp >= 0 &&
+    timestamp <= Math.floor(now / 1000) && timestamp * 1000 + 86_400_000 > now + 10_000;
+}
 // Provider payloads are untrusted. Ignore statuses and unmapped receiving numbers.
 export function parseMessages(payload: unknown, phoneId: string): Inbound[] {
   const body = payload as any;
@@ -45,10 +51,45 @@ export function parseMessages(payload: unknown, phoneId: string): Inbound[] {
       for (const message of value.messages) {
         if (typeof message?.id !== 'string' || !message.id.length || message.id.length > 512 || typeof message?.from !== 'string' || !message.from.length || message.from.length > 64) continue;
         const text = message.type === 'text' ? message.text?.body :
-          message.interactive?.list_reply?.id ?? message.interactive?.button_reply?.id ?? 'menú';
-        messages.push({ id: message.id, from: message.from, text: typeof text === 'string' ? text.slice(0, 1000) : 'menú' });
+          message.interactive?.list_reply?.id ?? message.interactive?.button_reply?.id ?? 'help';
+        const timestamp = typeof message.timestamp === 'string' && /^\d{1,10}$/.test(message.timestamp)
+          && Number(message.timestamp) <= Math.floor(Date.now() / 1000) ? Number(message.timestamp) : undefined;
+        messages.push({ id: message.id, from: message.from, text: typeof text === 'string' ? text.slice(0, 1000) : 'help',
+          ...(timestamp !== undefined ? { timestamp } : {}) });
       }
     }
   }
   return messages;
+}
+
+export type DeliveryStatus = {
+  id: string;
+  status: 'sent' | 'delivered' | 'read' | 'failed';
+  timestamp: number;
+  errorCode?: number;
+};
+
+// Normalize only bounded status evidence. Ignore recipient IDs and provider error
+// descriptions/URLs, which can contain private data. Statuses never become input.
+export function parseDeliveryStatuses(payload: unknown, phoneId: string): DeliveryStatus[] {
+  const body = payload as any;
+  if (body?.object !== 'whatsapp_business_account' || !Array.isArray(body.entry)) return [];
+  const statuses: DeliveryStatus[] = [];
+  for (const entry of body.entry) {
+    if (!Array.isArray(entry?.changes)) continue;
+    for (const change of entry.changes) {
+      const value = change?.value;
+      if (change?.field !== 'messages' || value?.metadata?.phone_number_id !== phoneId || !Array.isArray(value?.statuses)) continue;
+      for (const status of value.statuses) {
+        if (statuses.length === 100) return statuses;
+        if (typeof status?.id !== 'string' || !status.id.length || status.id.length > 512 ||
+          !['sent','delivered','read','failed'].includes(status.status) ||
+          typeof status.timestamp !== 'string' || !/^\d{1,10}$/.test(status.timestamp)) continue;
+        const errorCode = status.errors?.[0]?.code;
+        statuses.push({ id: status.id, status: status.status, timestamp: Number(status.timestamp),
+          ...(Number.isInteger(errorCode) && errorCode >= 0 && errorCode <= 2147483647 ? { errorCode } : {}) });
+      }
+    }
+  }
+  return statuses;
 }
