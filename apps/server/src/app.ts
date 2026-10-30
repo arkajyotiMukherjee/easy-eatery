@@ -16,10 +16,15 @@ import type { SandboxPayments } from './persistence/sandbox-payments.ts';
 import { registerSandboxRoutes } from './sandbox-routes.ts';
 import { registerWhatsAppSupportRoutes } from './persistence/whatsapp-support.ts';
 
-export type Config = { sandboxPayments?: SandboxPayments; payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
+import { registerLoyaltyRoutes } from './modules/loyalty/routes.ts';
+import type { LoyaltyDemo } from './modules/loyalty/service.ts';
+
+export type Config = { loyaltyDemo?: LoyaltyDemo; sandboxPayments?: SandboxPayments; payAtPickup?: boolean; adminToken?: string; repository?: PostgresRepository; verifyToken?: string; appSecret?: string; phoneId?: string; transport?: WhatsAppTransport; posProvider?: 'toteat' | 'fudo' };
 
 export function createApp(config: Config, store = new MemoryStore()) {
   if (!config.repository && (!config.adminToken || config.adminToken.length < 16)) throw new Error('ADMIN_TOKEN must contain at least 16 characters.');
+  if (config.loyaltyDemo && config.repository) throw new Error('Loyalty demo requires isolated memory-mode authentication; it must not attach to a restaurant database.');
+  if (config.loyaltyDemo && config.transport) throw new Error('Loyalty demo must not use live messaging transport.');
   if (config.payAtPickup) store.tenant.payAtPickup = true;
   if (config.posProvider) store.tenant.posProvider = config.posProvider;
   const queue = config.repository && config.transport && config.phoneId ? new WhatsAppQueue(config.repository, config.transport, config.phoneId) : undefined;
@@ -75,7 +80,14 @@ export function createApp(config: Config, store = new MemoryStore()) {
   registerSandboxRoutes(app, config.sandboxPayments, request => identities.get(request));
   registerWhatsAppSupportRoutes(app, config.repository, request => identities.get(request));
 
+  if (config.loyaltyDemo) registerLoyaltyRoutes(app, config.loyaltyDemo);
+
   const assets = new Map([['/', ['index.html', 'text/html']], ['/app.js', ['app.js', 'text/javascript']], ['/sandbox-ui.js', ['sandbox-ui.js', 'text/javascript']], ['/catalog-ui.js', ['catalog-ui.js', 'text/javascript']], ['/i18n.js', ['i18n.js', 'text/javascript']], ['/style.css', ['style.css', 'text/css']]]);
+  if (config.loyaltyDemo) {
+    assets.set('/loyalty', ['loyalty.html', 'text/html']);
+    assets.set('/loyalty-ui.js', ['loyalty-ui.js', 'text/javascript']);
+    assets.set('/loyalty.css', ['loyalty.css', 'text/css']);
+  }
   for (const [route, [file, type]] of assets) {
     app.get(route, async (_request, reply) => reply.type(type).send(await readFile(new URL(`../public/${file}`, import.meta.url), 'utf8')));
   }

@@ -137,3 +137,7 @@ Do not point a real payment webhook at the demo payment endpoint. Durable storag
 [Webpay sandbox setup](docs/webpay-sandbox.md) covers the opt-in PostgreSQL checkout, authoritative reconciliation and owner-only full test reversals. It uses local kitchen fulfillment and keeps test authorizations separate from real-money revenue. Actual hosted sandbox acceptance and production settlement remain unverified.
 
 [WhatsApp recovery](docs/whatsapp-recovery.md), [signed delivery evidence](docs/whatsapp-delivery-status.md) and [staff handoff/notifications](docs/whatsapp-support.md) describe the redacted staff controls and verified customer-service window. Apply migrations before starting an updated PostgreSQL server. For repeatable local acceptance, run `node --import tsx scripts/rehearse-demo.ts`; see the [operations runbook](docs/operations-rehearsal.md) and [POS access matrix](docs/pos-readiness.md) for remaining gates.
+
+## Independent loyalty demo
+
+Run `npm run demo:loyalty` and open `http://127.0.0.1:3001/loyalty`. This synthetic restaurant demo has a persistent local ledger, spend-based tokens, rewards and simulated Wallet/POS; it needs no external accounts. See [launch and bilingual walkthrough](docs/loyalty-demo.md) and [original specification import status](docs/sources/original-platform-specs/INDEX.md).
