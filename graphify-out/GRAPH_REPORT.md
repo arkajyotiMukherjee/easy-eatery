@@ -1,15 +1,15 @@
-# Graph Report - easy-eatery  (2026-10-28)
+# Graph Report - easy-eatery-pilot  (2026-10-30)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
 
 ## Summary
-- 603 nodes · 1684 edges · 26 communities (22 shown, 4 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 61 edges (avg confidence: 0.85)
+- 931 nodes · 2177 edges · 48 communities (41 shown, 7 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 79 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `79e64835`
+- Built from commit: `780c8078`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -40,143 +40,241 @@
 - Community 22
 - Community 23
 - Community 24
+- Community 25
+- Community 26
+- Community 27
+- Community 28
+- Community 29
+- Community 30
+- Community 31
+- Community 32
+- Community 33
+- Community 34
+- Community 35
+- Community 36
+- Community 37
+- Community 38
+- Community 39
+- Community 40
+- Community 41
+- Community 42
+- Community 43
+- Community 44
+- Community 45
+- Community 46
 
 ## God Nodes (most connected - your core abstractions)
-1. `Blocker: Webpay sandbox creation received security-page HTTP 403; no successful hosted checkout yet` - 42 edges
-2. `docs/cloud-agent-handoff.md: Verified implementation baseline` - 40 edges
-3. `tests/AGENTS.md: Verification map` - 40 edges
-4. `Implemented: durable WhatsApp jobs; uncertain sends pause for review, not blind replay` - 33 edges
-5. `createApp()` - 32 edges
-6. `Invariant: Spanish default plus complete English testing; CLP integer totals and Santiago dates` - 32 edges
-7. `PostgresRepository` - 31 edges
-8. `MemoryStore` - 31 edges
-9. `DomainError` - 30 edges
-10. `Evidence: local sandbox authority, permitted messaging, browser/image and disposable restore checks` - 30 edges
+1. `Implemented local loyalty demonstration with simulated Wallet/POS and preserved sources` - 43 edges
+2. `Blocker: Webpay sandbox creation received security-page HTTP 403; no successful hosted checkout yet` - 42 edges
+3. `tests/AGENTS.md: Verification map` - 41 edges
+4. `docs/cloud-agent-handoff.md: Verified implementation baseline` - 40 edges
+5. `createApp()` - 35 edges
+6. `Implemented: durable WhatsApp jobs; uncertain sends pause for review, not blind replay` - 33 edges
+7. `Invariant: Spanish default plus complete English testing; CLP integer totals and Santiago dates` - 32 edges
+8. `PostgresRepository` - 31 edges
+9. `MemoryStore` - 31 edges
+10. `DomainError` - 30 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AGENTS.md: Shared constraints and checks` --references--> `TEST_DATABASE_URL`  [EXTRACTED]
   AGENTS.md → .github/workflows/ci.yml
+- `docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 2. Canonical core entities` --references--> `Conversation`  [EXTRACTED]
+  docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md → apps/server/src/modules/whatsapp/conversation.ts
 - `tests/AGENTS.md: Verification map` --references--> `name`  [EXTRACTED]
   tests/AGENTS.md → .github/workflows/ci.yml
 - `tests/AGENTS.md: Verification map` --references--> `push`  [EXTRACTED]
   tests/AGENTS.md → .github/workflows/ci.yml
 - `tests/AGENTS.md: Verification map` --references--> `pull_request`  [EXTRACTED]
   tests/AGENTS.md → .github/workflows/ci.yml
-- `tests/AGENTS.md: Verification map` --references--> `contents`  [EXTRACTED]
-  tests/AGENTS.md → .github/workflows/ci.yml
 
 ## Import Cycles
 - None detected.
 
-## Communities (26 total, 4 thin omitted)
+## Communities (48 total, 7 thin omitted)
 
 ### Community -1 - "Community -1"
-Cohesion: 0.15
-Nodes (25): .github/AGENTS.md: CI and contribution automation, AGENTS.md: Easy Eatery repository guide, AGENTS.md: Retrieve context, AGENTS.md: Shared constraints and checks, AGENTS.md: Required context lifecycle, README.md: Agent context and cloud handoff, docs/cloud-agent-handoff.md: Start here: Git → graph → scoped guide → targeted source, docs/cloud-agent-handoff.md: Validate committed context hashes without Graphify/Python extras: (+17 more)
+Cohesion: 0.06
+Nodes (48): .github/AGENTS.md: CI and contribution automation, AGENTS.md: Easy Eatery repository guide, AGENTS.md: Retrieve context, AGENTS.md: Shared constraints and checks, AGENTS.md: Required context lifecycle, README.md: Cloud pilot implementation slices, README.md: Agent context and cloud handoff, docs/cloud-agent-handoff.md: Start here: Git → graph → scoped guide → targeted source (+40 more)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.09
-Nodes (30): { app, queue }, CloudWhatsAppTransport, customerWindowOpen(), DeliveryStatus, Inbound, parseDeliveryStatuses(), parseMessages(), validSignature() (+22 more)
+Cohesion: 0.07
+Nodes (48): Config, createApp(), deliverMessage(), run(), { app, queue }, WhatsAppTransport, CloudWhatsAppTransport, customerWindowOpen() (+40 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.08
-Nodes (50): createApp(), DemoPaymentProvider, DemoPosProvider, PaymentProvider, PosProvider, Conversation, Availability, cartSelection() (+42 more)
+Cohesion: 0.07
+Nodes (54): DemoPaymentProvider, DemoPosProvider, PaymentProvider, PosProvider, Conversation, Availability, cartSelection(), CatalogImport (+46 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.13
-Nodes (24): payment(), SandboxAttempt, SandboxPayment, SandboxStatus, text(), token(), WebpaySandbox, WebpaySandboxError (+16 more)
+Cohesion: 0.14
+Nodes (23): payment(), SandboxAttempt, SandboxPayment, SandboxStatus, text(), token(), WebpaySandbox, WebpaySandboxError (+15 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.07
-Nodes (44): dependencies, fastify@^5.6.1, pg@^8.23.1, devDependencies, tsx@^4.20.0, @types/node@^24.0.0, @types/pg@^8.23.1, typescript@^5.9.0 (+36 more)
+Cohesion: 0.14
+Nodes (21): body(), id, messages, registerLoyaltyRoutes(), integer(), key(), Ledger, LoyaltyDemo (+13 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (29): README.md: Cloud pilot implementation slices, Evidence: pilot changes integrated into main by authorized normal fast-forward, Authorization: cloud orchestrator may spawn bounded specialist subagents and finish independent pilot work, docs/cloud-agent-handoff.md: Easy Eatery: cloud orchestrator handoff, docs/cloud-agent-handoff.md: External access and blockers: do not invent missing facts, docs/cloud-agent-handoff.md: Meta / WhatsApp, docs/cloud-agent-handoff.md: Toteat and Fudo, docs/cloud-agent-handoff.md: Hosted checkout (+21 more)
+Cohesion: 0.06
+Nodes (40): access_tokens, branches, channel_accounts, conversations, inbox, memberships, order_lines, orders (+32 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.16
-Nodes (15): WhatsAppTransport, Identity, WhatsAppQueue, WhatsAppStatuses, handoffReason(), Kind, notificationText(), Reason (+7 more)
+Cohesion: 0.10
+Nodes (36): audit_events, dependencies, fastify@^5.6.1, pg@^8.23.1, devDependencies, tsx@^4.20.0, @types/node@^24.0.0, @types/pg@^8.23.1 (+28 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.15
-Nodes (29): api(), bubble(), catalogPanel, element(), formatMoney(), guard(), refresh(), renderDashboard() (+21 more)
-
-### Community 7 - "Community 7"
 Cohesion: 0.11
 Nodes (31): runs-on, services, steps, POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, TEST_DATABASE_URL, jobs (+23 more)
 
+### Community 7 - "Community 7"
+Cohesion: 0.17
+Nodes (26): api(), bubble(), catalogPanel, element(), formatMoney(), guard(), refresh(), renderDashboard() (+18 more)
+
 ### Community 8 - "Community 8"
-Cohesion: 0.11
-Nodes (26): access_tokens, audit_events, branches, channel_accounts, conversations, inbox, memberships, order_lines (+18 more)
+Cohesion: 0.09
+Nodes (21): Evidence: pilot changes integrated into main by authorized normal fast-forward, Authorization: cloud orchestrator may spawn bounded specialist subagents and finish independent pilot work, docs/cloud-agent-handoff.md: Easy Eatery: cloud orchestrator handoff, docs/cloud-agent-handoff.md: External access and blockers: do not invent missing facts, docs/cloud-agent-handoff.md: Meta / WhatsApp, docs/cloud-agent-handoff.md: Toteat and Fudo, docs/cloud-agent-handoff.md: Hosted checkout, docs/cloud-agent-handoff.md: Restaurant, hosting and operations (+13 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.12
-Nodes (16): POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, interval, retries, test, timeout, environment (+8 more)
+Cohesion: 0.24
+Nodes (18): action(), api(), button(), clearSession(), copy, empty(), money(), node() (+10 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.12
-Nodes (15): docs/live-demo-onboarding.md: Live-demo onboarding plan, docs/live-demo-onboarding.md: 8. Engineering execution and exit evidence, docs/live-demo-onboarding.md: 9. Spanish support drafts—prepared, not sent, docs/live-demo-onboarding.md: Toteat, docs/live-demo-onboarding.md: Fudo, docs/live-demo-onboarding.md: 10. First handoff, docs/live-demo-onboarding.md: Implementation progress — local pay-at-pickup slice, docs/live-demo-onboarding.md: 2. What you provide first—without secrets in chat (+7 more)
+Nodes (16): POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, interval, retries, test, timeout, environment (+8 more)
 
 ### Community 11 - "Community 11"
+Cohesion: 0.12
+Nodes (16): docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: Restaurant Owner Admin Dashboard & Shared UX, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: 3. Roles, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: 1. Purpose, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: 4. Owner onboarding flow, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: 5. Home page composition, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: 6. Core admin pages and interaction patterns, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: Module catalog, docs/sources/original-platform-specs/restaurant-platform-specs/02-admin-dashboard-and-ux.md: Integrations page (+8 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.12
+Nodes (15): docs/live-demo-onboarding.md: Live-demo onboarding plan, docs/live-demo-onboarding.md: 8. Engineering execution and exit evidence, docs/live-demo-onboarding.md: 9. Spanish support drafts—prepared, not sent, docs/live-demo-onboarding.md: Toteat, docs/live-demo-onboarding.md: Fudo, docs/live-demo-onboarding.md: 10. First handoff, docs/live-demo-onboarding.md: Implementation progress — local pay-at-pickup slice, docs/live-demo-onboarding.md: 2. What you provide first—without secrets in chat (+7 more)
+
+### Community 13 - "Community 13"
+Cohesion: 0.13
+Nodes (13): README.md: Easy Eatery, README.md: Read next, README.md: HTTP surface, README.md: Run the demo, README.md: Independent loyalty demo, README.md: Durable WhatsApp message processing, README.md: Pay at pickup without a POS, docs/webpay-sandbox.md: Staff-assisted Webpay sandbox checkout (+5 more)
+
+### Community 14 - "Community 14"
+Cohesion: 0.13
+Nodes (14): docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: Product Direction & Implementation Milestones, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 8. Risk register, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 9. Decision log format, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 2. Two-person-team delivery rule, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 3. How to choose the first workflow, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 1. Product thesis, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: 4. Milestones ordered by value and risk, not by original module numbering, docs/sources/original-platform-specs/restaurant-platform-specs/00-product-direction-and-milestones.md: Rule for moving work between milestones (+6 more)
+
+### Community 15 - "Community 15"
+Cohesion: 0.14
+Nodes (13): docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: Shared Platform Architecture, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 9. Data and event consistency, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 10. Deployment topology for first customers, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 11. What not to build yet, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 12. Architecture acceptance criteria, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 3. Repository layout, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 1. Architectural decision, docs/sources/original-platform-specs/restaurant-platform-specs/01-platform-architecture.md: 4. Logical architecture (+5 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.14
+Nodes (13): docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: Chile POS Integration Strategy — Toteat and Fudo, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 6. Shared `PosAdapter` contract, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 7. Sync safety, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 2. Connector capability model, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 8. Certification checklist before listing a provider as supported, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 3. Toteat public API findings, docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: Important Toteat endpoints (verify exact schema in current OpenAPI before coding), docs/sources/original-platform-specs/restaurant-platform-specs/10-chile-integrations-pos.md: 1. Do not pretend market share is known (+5 more)
+
+### Community 17 - "Community 17"
+Cohesion: 0.17
+Nodes (11): docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: Module Specification — Pickup Ordering & Kitchen Dashboard, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 2. MVP customer flow, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 3. State machines, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 4. Data model, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 5. API sketch, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 6. Kitchen dashboard, docs/sources/original-platform-specs/restaurant-platform-specs/05-module-pickup-ordering.md: 7. Scheduling/availability logic (+3 more)
+
+### Community 18 - "Community 18"
+Cohesion: 0.17
+Nodes (11): docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: Module Specification — Loyalty, Google Wallet & POS Verification, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 2. MVP phases, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 3. Data model, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 4. Earning rules, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 5. Redemption rules, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 6. Google Wallet implementation, docs/sources/original-platform-specs/restaurant-platform-specs/06-module-loyalty-and-pos.md: 7. POS verification contract (+3 more)
+
+### Community 19 - "Community 19"
+Cohesion: 0.17
+Nodes (11): docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: Module Specification — Restaurant CRM & Data Aggregation, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 3. Data model, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 4. Identity resolution, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 5. RFM and lifecycle definitions, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 6. Source collection paths, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 7. Privacy and marketing safety, docs/sources/original-platform-specs/restaurant-platform-specs/07-module-crm.md: 8. Reporting UX (+3 more)
+
+### Community 20 - "Community 20"
+Cohesion: 0.17
+Nodes (11): docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: Module Specification — WhatsApp Conversations, Ordering & Campaigns, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 3. MVP scope (deterministic before AI), docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 4. Data model, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 5. Order conversation state machine, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 6. Payment link flow, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 7. Outbound campaign workflow, docs/sources/original-platform-specs/restaurant-platform-specs/08-module-whatsapp.md: 8. AI behavior and guardrails (+3 more)
+
+### Community 21 - "Community 21"
+Cohesion: 0.17
+Nodes (11): docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: Testing Strategy & Definition of Done, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: 2. MVP critical scenarios, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: Platform/entitlements, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: Orders/payments, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: POS, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: 1. Test layers, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: Loyalty, docs/sources/original-platform-specs/restaurant-platform-specs/17-testing-and-acceptance.md: WhatsApp/CRM/privacy (+3 more)
+
+### Community 22 - "Community 22"
 Cohesion: 0.17
 Nodes (11): compilerOptions, allowImportingTsExtensions, esModuleInterop, forceConsistentCasingInFileNames, module, moduleResolution, noEmit, skipLibCheck (+3 more)
 
-### Community 12 - "Community 12"
+### Community 23 - "Community 23"
 Cohesion: 0.18
 Nodes (10): label, placeholder, body, attributes, id, type, validations, description (+2 more)
 
-### Community 13 - "Community 13"
+### Community 24 - "Community 24"
+Cohesion: 0.18
+Nodes (10): docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: Module Specification — QR Digital Menu, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: Optional integrations, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 2. MVP scope, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 3. Domain model, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 4. Public routes, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 5. UX, docs/sources/original-platform-specs/restaurant-platform-specs/04-module-qr-menu.md: 6. Data and integration behavior (+2 more)
+
+### Community 25 - "Community 25"
+Cohesion: 0.18
+Nodes (10): docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: Module Specification — Catering & Private Event Estimator, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 3. Pricing engine, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 1. Product contract, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 4. Data model, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 5. Statuses, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 6. PDF/communications, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 7. Admin screens, docs/sources/original-platform-specs/restaurant-platform-specs/09-module-catering.md: 8. Capacity and feasibility (+2 more)
+
+### Community 26 - "Community 26"
+Cohesion: 0.18
+Nodes (10): docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: Deployment, Environments & Operations, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 2. Environments, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 3. Runtime services, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 4. Infrastructure-as-code and deploy, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 1. Initial provider/region recommendation, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 5. Data protection / backup, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 6. Observability, docs/sources/original-platform-specs/restaurant-platform-specs/13-deployment-and-operations.md: 7. Cost controls (+2 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.18
+Nodes (10): docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: Pre-Build Customer Validation & First Restaurant Pilot, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 3. Interview guide, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 4. Prototype screens to make before code, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 1. Objective, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 5. Prototype feedback test, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 6. Pilot agreement checklist, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 7. Concierge pilot options, docs/sources/original-platform-specs/restaurant-platform-specs/15-prebuild-customer-validation.md: 2. Recruitment plan (+2 more)
+
+### Community 28 - "Community 28"
+Cohesion: 0.20
+Nodes (9): docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: Shared Design System & Frontend Standards, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 3. Tokens, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 4. Layout patterns, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 1. Product feel, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 5. Localization for Chile, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 6. Public menu performance, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 7. Frontend security, docs/sources/original-platform-specs/restaurant-platform-specs/03-design-system-and-frontend.md: 8. Frontend acceptance checklist (+1 more)
+
+### Community 29 - "Community 29"
+Cohesion: 0.20
+Nodes (9): docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: Security, Privacy & Chile Compliance Checklist, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 3. Consent and suppression, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 4. Data minimization, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 5. Customer rights and lifecycle, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 6. Security controls, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 1. Chile-specific timing, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 7. Chile operational/commercial checks, docs/sources/original-platform-specs/restaurant-platform-specs/12-security-privacy-chile.md: 8. Security acceptance checklist (+1 more)
+
+### Community 30 - "Community 30"
+Cohesion: 0.20
+Nodes (9): docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: Modular Catalog, Subscription Billing & Entitlements, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 3. Tables, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 4. Dependency/activation flow, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 1. Goals, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 5. Dependency graph, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 6. Pricing model recommendation, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 7. Chile billing provider, docs/sources/original-platform-specs/restaurant-platform-specs/14-billing-entitlements.md: 8. Acceptance criteria (+1 more)
+
+### Community 31 - "Community 31"
 Cohesion: 0.22
 Nodes (7): docs/catalog-and-availability.md: Shared catalog, availability and manual import (#7), docs/catalog-and-availability.md: Canonical file import, docs/catalog-and-availability.md: Implemented scope and provider gate, docs/catalog-and-availability.md: Customer selection and safe confirmation, docs/catalog-and-availability.md: Availability rules, docs/catalog-and-availability.md: HTTP surface, docs/catalog-and-availability.md: Staff controls
 
-### Community 14 - "Community 14"
-Cohesion: 0.22
-Nodes (8): docs/architecture.md: Architecture and deployment, docs/architecture.md: Durable model to implement in M1/M2, docs/architecture.md: Runtime boundaries, docs/architecture.md: Payment and fulfillment contracts, docs/architecture.md: Regional deployment target, docs/architecture.md: Observability and required verification, docs/architecture.md: PostgreSQL and access implementation (#6), docs/architecture.md: Catalog and availability extension (#7)
-
-### Community 15 - "Community 15"
+### Community 32 - "Community 32"
 Cohesion: 0.22
 Nodes (8): docs/product-and-milestones.md: Product direction and POC milestones, docs/product-and-milestones.md: Commercial modularity, docs/product-and-milestones.md: What is complete in this change, docs/product-and-milestones.md: Delivery gates, docs/product-and-milestones.md: Scope update: prospect demo before restaurant onboarding, docs/product-and-milestones.md: Suggested two-person division, docs/product-and-milestones.md: First pilot release essentials, docs/product-and-milestones.md: First outcome
 
-### Community 16 - "Community 16"
+### Community 33 - "Community 33"
+Cohesion: 0.22
+Nodes (8): docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: Shared Domain Model, API & Event Contracts, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 2. Canonical core entities, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 3. Event envelope, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 1. Global identifiers and money/time rules, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 4. Initial event taxonomy, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 5. Transactional outbox/inbox, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 6. API conventions, docs/sources/original-platform-specs/restaurant-platform-specs/16-shared-domain-and-event-contracts.md: 7. Critical invariants
+
+### Community 34 - "Community 34"
 Cohesion: 0.25
 Nodes (7): docs/integrations.md: Integration decisions and test setup, docs/integrations.md: Toteat, docs/integrations.md: Fudo, docs/integrations.md: Hosted checkout gate, docs/integrations.md: WhatsApp test-account setup, docs/integrations.md: Provider parity gate, docs/integrations.md: Capability matrix
 
-### Community 17 - "Community 17"
+### Community 35 - "Community 35"
 Cohesion: 0.29
 Nodes (6): docs/github-reconciliation.md: GitHub reconciliation handoff for the local Mac, docs/github-reconciliation.md: Required PR workflow, docs/github-reconciliation.md: Concrete issue updates, docs/github-reconciliation.md: Integration update, docs/github-reconciliation.md: Milestone decision, docs/github-reconciliation.md: Current access and repository evidence
 
-### Community 18 - "Community 18"
+### Community 36 - "Community 36"
+Cohesion: 0.29
+Nodes (6): docs/sources/original-platform-specs/README(1).md: Chile Restaurant Platform — Product & Engineering Specification Pack, docs/sources/original-platform-specs/README(1).md: Start here, docs/sources/original-platform-specs/README(1).md: Document index, docs/sources/original-platform-specs/README(1).md: Non-negotiable product principles, docs/sources/original-platform-specs/README(1).md: Research caveat, docs/sources/original-platform-specs/README(1).md: Primary references (verified 2026-10-15)
+
+### Community 37 - "Community 37"
+Cohesion: 0.29
+Nodes (6): docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Chile Restaurant Platform — Product & Engineering Specification Pack, docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Start here, docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Document index, docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Non-negotiable product principles, docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Research caveat, docs/sources/original-platform-specs/restaurant-platform-specs/README.md: Primary references (verified 2026-10-15)
+
+### Community 38 - "Community 38"
 Cohesion: 0.33
 Nodes (5): docs/demo-and-pilot.md: Customer demo and pilot acceptance, docs/demo-and-pilot.md: Sandbox acceptance before live pilot, docs/demo-and-pilot.md: Five-minute discovery demo (available now), docs/demo-and-pilot.md: Pilot go/no-go, docs/demo-and-pilot.md: Validation record for this foundation
 
-### Community 19 - "Community 19"
+### Community 39 - "Community 39"
 Cohesion: 0.33
 Nodes (5): docs/issue-evidence.md: Pending GitHub delivery evidence, docs/issue-evidence.md: Issues #14, #15, #17 and #27: sandbox checkout and local fulfillment, docs/issue-evidence.md: Issues #13, #22 and #23: POS readiness, docs/issue-evidence.md: Issues #18, #19, #20 and #21: local operations evidence, docs/issue-evidence.md: Issues #10 and #12: delivery, staff handoff and notifications
 
-### Community 20 - "Community 20"
-Cohesion: 0.40
-Nodes (4): docs/webpay-sandbox.md: Staff-assisted Webpay sandbox checkout, docs/webpay-sandbox.md: Rehearse the flow, docs/webpay-sandbox.md: Full test reversals and exceptions, docs/webpay-sandbox.md: Evidence and gates
-
 ## Knowledge Gaps
-- **111 isolated node(s):** `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo`, `README.md: Durable WhatsApp message processing`, `README.md: Read next` (+106 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 175 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **332 isolated node(s):** `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo`, `README.md: Durable WhatsApp message processing`, `README.md: Read next` (+327 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 405 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `migrations/AGENTS.md: Database schema history` connect `Community 0` to `Community 8`, `Community 2`, `Community 13`, `Community 5`?**
-  _High betweenness centrality (0.114) - this node is a cross-community bridge._
+- **Why does `migrations/AGENTS.md: Database schema history` connect `Community 0` to `Community 4`, `Community 31`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `createApp()` (e.g. with `.acceptPickup()` and `.dashboard()`) actually correct?**
   _`createApp()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `AGENTS.md: Easy Eatery repository guide`, `README.md: Easy Eatery`, `README.md: Run the demo` to the rest of the system?**
-  _111 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _332 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community -1` be split into smaller, more focused modules?**
-  _Cohesion score 0.14793741109530584 - nodes in this community are weakly interconnected._
-- **Why does `docs/cloud-agent-handoff.md: Verified implementation baseline` connect `Community 6` to `Community 0`, `Community 1`, `Community 4`, `Community 5`?**
-  _High betweenness centrality (0.107) - this node is a cross-community bridge._
+  _Cohesion score 0.055944055944055944 - nodes in this community are weakly interconnected._
+- **Why does `docs/cloud-agent-handoff.md: Verified implementation baseline` connect `Community 7` to `Community 8`, `Community 0`, `Community 13`, `Community 1`?**
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.08922621251388374 - nodes in this community are weakly interconnected._
-- **Why does `tests/AGENTS.md: Verification map` connect `Community 7` to `Community 0`, `Community 1`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+  _Cohesion score 0.0700063211125158 - nodes in this community are weakly interconnected._
+- **Why does `tests/AGENTS.md: Verification map` connect `Community 6` to `Community 0`, `Community 1`, `Community 3`?**
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._

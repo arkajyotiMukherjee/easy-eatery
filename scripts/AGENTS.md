@@ -11,3 +11,7 @@ Read `docs/postgres-storage.md` and `docs/catalog-and-availability.md`. Validate
 `rehearse-demo.ts` starts and stops isolated loopback memory-mode servers through the real entrypoint. Run `node --import tsx scripts/rehearse-demo.ts` for Spanish/English local pickup and both simulated POS labels, HTTP/auth/replay/state/metrics checks. It accepts no target URL, overrides persistence/transport for its own child processes, uses ephemeral credentials without printing them, and never contacts providers or an existing database. See `docs/operations-rehearsal.md` for separate browser, PostgreSQL, packaging, privacy and staging gates.
 
 `database.ts sandbox-mode` explicitly selects a development branch for Webpay integration/local fulfillment, disables pay at pickup for new orders and leaves confirmed snapshots unchanged. See `docs/webpay-sandbox.md`.
+
+`loyalty-demo.ts` runs a separate loopback synthetic loyalty console with its own locked atomic JSON snapshot. It deliberately ignores `.env` and restaurant/provider configuration. See `docs/loyalty-demo.md`; only fictional data belongs in its ignored `.demo/` directory.
+
+`rehearse-loyalty-browser.py` is an optional Playwright/Chromium real-process rehearsal. It uses a temporary snapshot/port and test-only key, stops its processes, and writes only synthetic ignored screenshots under `.demo/evidence/`. It also simulates a lost committed HTTP response to verify replay safety.

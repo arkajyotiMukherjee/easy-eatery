@@ -9,3 +9,5 @@ Preserve bearer authentication for `/api/`, schema rejection of extra input, raw
 For routes/auth/signatures run `npm run check`, `tests/poc.test.ts` through `npm test`, and database integration checks when storage scope changes. For local pickup also inspect `tests/pickup.test.ts`.
 
 Durable exception recovery routes live under `/api/whatsapp/delivery/jobs`; `persistence/whatsapp-recovery.ts` owns scoped listing and guarded transitions. Route schemas require explicit expected state and review-without-resend confirmation. See `docs/whatsapp-recovery.md`; do not turn uncertain sends into automatic retry or claim delivery from staff review.
+
+The opt-in `loyaltyDemo` service registers isolated `/api/demo/loyalty` endpoints and assets. It is only enabled by the dedicated loopback launcher, rejects PostgreSQL/live transport combinations, and shares memory-mode bearer authentication. See `modules/loyalty/AGENTS.md`; this does not add loyalty to live restaurant storage.

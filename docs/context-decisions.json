@@ -1,5 +1,5 @@
 {
-  "snapshot_date": "2026-10-28",
+  "snapshot_date": "2026-10-30",
   "source_of_truth": "Explicit founder decisions and verified implementation; recheck live external status",
   "decisions": [
     {
@@ -85,6 +85,24 @@
       "detail": "On29October remote main was verified at79e6483 after fresh28 application tests,43 PostgreSQL TAP results, type/browser syntax and context checks passed. Issue12 implementation is ready for local closure;5/6 already closed. Real-device acceptance remains9/27; other issue criteria and all milestones remain incomplete. No cloud API issue/milestone write occurred.",
       "source": "docs/cloud-agent-handoff.md",
       "code_paths": []
+    },
+    {
+      "id": "loyalty-local-request",
+      "title": "Decision: local loyalty demo with preserved original source specifications",
+      "detail": "Founder supplied original specifications and requests MVP-A staff ledger with unfinished Google Wallet/POS integrations simulated. Preserve Node24/Fastify/native browser stack; source archive is historical design, not implementation evidence. Tested cloud code handoff integrated locally; independently verify before launch; synthetic data and loopback only.",
+      "source": "docs/sources/original-platform-specs/CURRENT-ADAPTATIONS.md",
+      "code_paths": []
+    },
+    {
+      "id": "loyalty-demo",
+      "title": "Implemented local loyalty demonstration with simulated Wallet/POS and preserved sources",
+      "detail": "Single synthetic restaurant, owner bearer key, atomic JSON snapshots, immutable authoritative ledger and rule/reward snapshots, duplicate-safe sale/refund handling, expiring single-use redemption with reasoned completion/cancellation, manual adjustments, explicit loyalty-only consent and opaque revocable card IDs. Original 19 Markdown specifications imported with verified bytes. Real customer roles, tenant/branch persistence, camera/barcode scanning, real Wallet and vendor POS are deferred.",
+      "source": "docs/loyalty-demo.md",
+      "code_paths": [
+        "apps/server/src/modules/loyalty/service.ts",
+        "apps/server/src/modules/loyalty/routes.ts",
+        "scripts/loyalty-demo.ts"
+      ]
     }
   ]
 }

@@ -1,0 +1,9 @@
+# Isolated loyalty demo
+
+`service.ts` owns synthetic-restaurant loyalty domain and atomic local snapshots. `routes.ts` translates strict bearer-protected `/api/demo/loyalty` requests. The dedicated `scripts/loyalty-demo.ts` starts loopback-only, never loads `.env`, locks its snapshot, and injects the service into `createApp`. Normal application startup leaves this module disabled. PostgreSQL/live transport combinations fail closed.
+
+Preserve immutable earned-rate/reward snapshots, floor integer CLP calculation, append-only ledger effects, serialized persistence before state publication, request payload fingerprints, one-time fulfillment and full reversal idempotency. Refunds may create negative token debt; never silently award back a spent reward or block ledger correction. Wallet is a fallible simulated projection; provider failure cannot undo local earning. Do not label local preview as an issued Google Wallet pass.
+
+This fixed-scope synthetic restaurant uses one owner key. UI perspectives are not real role/tenant authorization. Live customer enrollment, POS webhooks, scanning, real pass signing and restaurant persistence require a separate implementation. See docs/loyalty-demo.md and the preserved original-source index at docs/sources/original-platform-specs/INDEX.md. Run tests/loyalty.test.ts plus normal app checks; never write test data to an existing snapshot.
+
+Reservations debit spendable balance immediately, expire after ten minutes and require their opaque authorization plus reason/transaction reference to complete. Cancelled reservations compensate via a new ledger entry and cannot fulfill; used reservations cannot cancel. Manual adjustments require owner bearer auth and nonblank reason. Member barcode revocation replaces the identifier; scanning identifies only, never grants authorization. Enrollment accepts loyalty explicitly and never implies marketing consent.

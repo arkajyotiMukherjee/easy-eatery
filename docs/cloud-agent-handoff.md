@@ -185,3 +185,15 @@ Stop at a truthful readiness boundary:
 4. **Restaurant pilot:** approved restaurant/menu/operations, correct selected POS kitchen routing, authorized sender and settlement, privacy/recovery/staging ownership and sign-off. Externally gated. Both-provider support requires distinct Toteat and Fudo acceptance evidence.
 
 If a cloud run cannot satisfy the next external gate, finish all independent scoped work, leave safe runnable defaults, and provide a concise blocker matrix. Do not repeat blocked account setup or mislabel the whole pilot complete.
+
+## 30 October 2026: original source import and local loyalty request
+
+The founder supplied the complete original specification archive and matching standalone README. All 19 archived Markdown documents, the original manifest and separate README are preserved under [the source index](sources/original-platform-specs/INDEX.md), with byte-level checksums and provenance. Read current adaptations there before implementing historical framework proposals. Preserve the current Fastify/Node 24/native browser stack.
+
+The founder now requests a local loyalty demo: source MVP-A staff ledger first, with unfinished MVP-B Google Wallet and MVP-C POS integrations explicitly simulated. The source import itself adds no loyalty implementation evidence. The separate loyalty patch has now been integrated locally; keep the demo loopback-only and use synthetic data. Do not publish externally or infer real-provider approval.
+
+## Local loyalty implementation: 30 October 2026
+
+`npm run demo:loyalty` starts the independent synthetic restaurant at `http://127.0.0.1:3001/loyalty`. It uses a dedicated locked atomic JSON snapshot, server-authoritative append-only points ledger, immutable earning/reward snapshots, duplicate-safe sale/refund effects, explicit consent, opaque revocable card IDs, reasoned manual adjustments, ten-minute single-use reward authorization and compensating cancellation. Wallet and POS are simulated. Customer/staff/owner views share one local owner credential; real tenant/branch roles, PostgreSQL loyalty, physical scanning and installed Google Wallet passes are deferred. See [the loyalty runbook](loyalty-demo.md) and [the preserved original source index](sources/original-platform-specs/INDEX.md).
+
+The patch was verified against supplied size/SHA-256 before integration on the authorized Mac, preserving the original source documents and current `main`. No external publication, live provider request or real customer data is part of this slice. Local validation results belong in the runbook; cloud screenshots and simulation success do not prove restaurant readiness.
